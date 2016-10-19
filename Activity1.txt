@@ -1,0 +1,59 @@
+IMAS
+MAIN AGENTS: scouts && harvesters
+ADDITIONAL AGENTS: SystemAgent, CoordinatorAgent, ScoutCoordinator, HarvesterCoordinator
+ACTIONS: garbage detecting(S), garbage harvesting(H) and garbage recycling(H)
+
+PROBLEM: interaction with the right harvesters. I mean with the nearest to the garbage position, but satisfying some criteria, for example: nearest but free (no harvesting the total amount of garbage it can carry); POSIBLE SOLUTION: a central Agent that leads with the position of all agents and their plans to deal. This central Agent will receive the messages of scouts agents process the information and communicate to the "nearest" available harvester agent to manage the garbage and also it could give to the harvester the optimal route to get the garbage.
+
+SCOUTS: They explore the map. These vehicles will move through the city discovering the buildings that have garbage. They cannot harvest garbage. They can move, horizontally or vertically, 1 cell per turn.
+
+HARVESTERS: They harvest garbage and bring it to a recycling center. They can move, horizontally or vertically, 1 cell per turn. In order to harvest garbage, they must be situated in a cell adjacent to the building containing garbage (horizontally, vertically or diagonally) and remain there for some time (1 turn per garbage unit). Each harvester can harvest one or more kinds of garbage but it can only carry one kind of garbage at the same time. Moreover, harvesters will have a maximum number of units of garbage that they can carry. When they have harvested garbage, they can go to harvest in another building if the maximum number of units has not been reached or they can go to recycle this garbage. To do this, a harvester has to be situated in a cell adjacent to a recycling center (horizontally, vertically or diagonally) that allows the kind of garbage it is carrying and remain there for some time (1 turn per garbage unit). Several harvesters can be harvesting garbage from the same building or disposing garbage in the same recycling center at the same time.
+
+SYSTEM: This is agent is responsible for:
+	Loading the configuration settings at the initialization phase.
+	Spreading the necessary configuration settings and current status of the mountain to the CoordinatorAgent.
+	Providing a GUI where to show the map grid and all its static and mobile elements.
+	Adding new bargage in the map in a random and dynamic way:
+	Deciding if garbage has to appear in the next step. Probability of new garbage.
+	Deciding the number of buildings that will have new garbage.
+	Deciding the type of garbage per building (recall, a building contains only a single type of garbage at a time).
+	Deciding the amount of garbage units put in that building.
+
+COORDINATOR: This agent can comunicate with the ScoutCoordinator and the HarvesterCoordinator, providing them the information given by the SystemAgent.
+
+SCOUT COORDINATOR: This agent is responsible for coordinating ScoutAgents (you can decide to add additional levels of hierarchy), and communicate with CoordinatorAgent.
+
+HARVESTERCOORDINATOR: This agent is responsible for coordinating HarvesterAgents (you can decide adding additional levels of hierarchy as described above), and communicate with CoordinatorAgent.
+
+SCOUTAGENT: These agents are responsible to discover where garbage is and inform about it. Since garbage appear dinamically, they have to be moving continuously to discover it as soon as possible.
+
+HARVESTERAGENT: These agents can bring several types of garbage, but only a single type of garbage at a time. They also have a maximum capacity of garbage units that they can bring.
+
+ADDITIONAL AGENTS: There is always a coordinator agent which centralizes the orders to be executed in each turn. This coordinator agent knows which are the changes that dynamically happen in the city (e.g., movement of the vehicles, garbage harvested, etc.). In order to simulate and control what is happening, there is also a system agent which executes orders to update the state of the world. This agent is the one that, in a nutshell, keeps the state of the city and shows it to the user using a graphical interface.
+
+ENVIROMENT:
+FULLY OBSERVABLE VS PARTIALLY OBSERVABLE: 1 VS 0
+DETERMINISTIC VS STOCHASTIC: 1 VS 0 {NON-DETERMINISTYC}
+EPISODIC VS SEQUENTIAL: 1 VS 0
+STATIC VS DYNAMIC: 0 VS 1 -> semidynamic OR DYNAMIC the dynamic is made by an agent or how is working this feature?
+DISCRETE VS CONTINUOUS: 1 VS 0
+SINGLE AGENT VS MULTI AGENT: 0 VS 1
+Knowledge (known or unknown): 1 VS 0
+IS Simulated
+
+ARCHITECTURE:
+REACTIVE: SystemAgent, CoordinatorAgent, ScoutCoordinator, HarvesterCoordinator
+HYBRID: scouts, harvesters
+
+PROPERTIES:
+SystemAgent: Flexibility(social)
+CoordinatorAgent: Flexibility(social)
+ScoutCoordinator: Flexibility(social)
+HarvesterCoordinator: Flexibility(social)
+Scouts: Flexibility(social)
+Harvesters: Flexibility(social)
+
+Bibliography:
+https://en.wikibooks.org/w/index.php?title=Artificial_Intelligence/AI_Agents_and_their_Environments&oldid=3034421&diff=cur&diffonly=0
+Russell and Norvig (2009)
+Russell, S. & Norvig, S. (2009). Artificial Intelligence: A Modern Approach. Third Edition. Prentice Hall.
