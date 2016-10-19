@@ -31,7 +31,7 @@ HARVESTERAGENT: These agents can bring several types of garbage, but only a sing
 
 ADDITIONAL AGENTS: There is always a coordinator agent which centralizes the orders to be executed in each turn. This coordinator agent knows which are the changes that dynamically happen in the city (e.g., movement of the vehicles, garbage harvested, etc.). In order to simulate and control what is happening, there is also a system agent which executes orders to update the state of the world. This agent is the one that, in a nutshell, keeps the state of the city and shows it to the user using a graphical interface.
 
-ENVIROMENT:
+ENVIROMENT: FULLY OBSERVABLE, DETERMINISTIC, EPISODIC, SEMIDYNAMIC, DISCRETE, MULTI AGENT, KNOWED, IS SIMULATED.
 FULLY OBSERVABLE VS PARTIALLY OBSERVABLE: 1 VS 0
 DETERMINISTIC VS STOCHASTIC: 1 VS 0 {NON-DETERMINISTYC}
 EPISODIC VS SEQUENTIAL: 1 VS 0
@@ -46,12 +46,12 @@ REACTIVE: SystemAgent, CoordinatorAgent, ScoutCoordinator, HarvesterCoordinator
 HYBRID: scouts, harvesters
 
 PROPERTIES:
-SystemAgent: Flexibility(social)
-CoordinatorAgent: Flexibility(social)
-ScoutCoordinator: Flexibility(social)
-HarvesterCoordinator: Flexibility(social)
-Scouts: Flexibility(social)
-Harvesters: Flexibility(social)
+SystemAgent: Flexibility(social,reactive),veracity
+CoordinatorAgent: Flexibility(social,reactive),Autonomy,veracity,temporal continuity
+ScoutCoordinator: Flexibility(social,reactive),Autonomy,veracity,temporal continuity
+HarvesterCoordinator: Flexibility(social,reactive),Autonomy,veracity,temporal continuity
+Scouts: Flexibility(social,proactive),Rationality,Autonomy,veracity,temporal continuity
+Harvesters: Flexibility(social,reactive),Autonomy,veracity,temporal continuity
 
 Bibliography:
 https://en.wikibooks.org/w/index.php?title=Artificial_Intelligence/AI_Agents_and_their_Environments&oldid=3034421&diff=cur&diffonly=0
