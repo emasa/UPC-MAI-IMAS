@@ -17,19 +17,14 @@
  */
 package cat.urv.imas.behaviour.system;
 
-import cat.urv.imas.agent.AgentType;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREResponder;
 import cat.urv.imas.agent.SystemAgent;
-import cat.urv.imas.map.Cell;
-import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.MessageContent;
-import java.util.List;
-import java.util.Map;
 
 /**
- * A request-responder behaviour for System agent, answering to queries
+ * A request-responder behavior for System agent, answering to queries
  * from the Coordinator agent. The Coordinator Agent sends a REQUEST of the whole
  * game information and the System Agent sends an AGREE and then an INFORM
  * with the city information.
@@ -39,7 +34,7 @@ public class RequestResponseBehaviour extends AchieveREResponder {
     /**
      * Sets up the System agent and the template of messages to catch.
      *
-     * @param agent The agent owning this behaviour
+     * @param agent The agent owning this behavior
      * @param mt Template to receive future responses in this conversation
      */
     public RequestResponseBehaviour(SystemAgent agent, MessageTemplate mt) {
@@ -52,7 +47,7 @@ public class RequestResponseBehaviour extends AchieveREResponder {
      * message type is AGREE, method prepareResultNotification() will be invoked.
      * 
      * @param msg message received.
-     * @return AGREE message when all was ok, or FAILURE otherwise.
+     * @return AGREE message when all was OK, or FAILURE otherwise.
      */
     @Override
     protected ACLMessage prepareResponse(ACLMessage msg) {
