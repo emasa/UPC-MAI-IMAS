@@ -46,10 +46,10 @@ public class NewGarbageBehaviour extends OneShotBehaviour {
         
         double newGarbageProbability = this.overrideNewGarbageProbability;
         if (this.overrideNewGarbageProbability < 0.0) {
-            // in game settings the probability is in range [0, 100]
-            game.setNewGarbageProbability(50);
+            // normalize game settings probability (original range [0, 100])
             newGarbageProbability = game.getNewGarbageProbability()/100.0;
-            agent.log("Using default newGarbageProbability " + newGarbageProbability);
+        } else {
+            agent.log("Override settings new garbage probability. Value: " + newGarbageProbability);        
         }
         
         // check if new garbage will be created (with a given probability)
@@ -58,7 +58,7 @@ public class NewGarbageBehaviour extends OneShotBehaviour {
             return;
         }
         // shuffle the list of empty buildings and select those on the top
-        List<BuildingCell> emptyBuildings = getEmptyBuildings(game);
+        List<SettableBuildingCell> emptyBuildings = getEmptyBuildings(game);
         Collections.shuffle(emptyBuildings, agent.getRandom());
         // stop when maximum number of buildings with new garbage is reached
         // or there are not more empty buildings 
@@ -70,9 +70,10 @@ public class NewGarbageBehaviour extends OneShotBehaviour {
              ++building_idx , ++numberOfBuildingsWithNewGargabe) {
  
             // cast to SettableBuildingCell (only allowed to the SystemAgent)
-            SettableBuildingCell building = (SettableBuildingCell) emptyBuildings.get(building_idx);            
+            SettableBuildingCell building = emptyBuildings.get(building_idx);            
             // decide new amount and new type of garbage randomly
-            int newAmount = agent.getRandom().nextInt(game.getMaxAmountOfNewGargabe() + 1);
+            // nextInt returns numbers between [0, maxAmount) then add up 1 [1, maxAmount]
+            int newAmount = agent.getRandom().nextInt(game.getMaxAmountOfNewGargabe()) + 1;
             GarbageType newType = GARBAGE_TYPES[agent.getRandom().nextInt(3)];
             building.setGarbage(newType, newAmount);
             
@@ -80,18 +81,18 @@ public class NewGarbageBehaviour extends OneShotBehaviour {
         }     
     }
 
-    private List<BuildingCell> getEmptyBuildings(GameSettings game) {
+    private List<SettableBuildingCell> getEmptyBuildings(GameSettings game) {
         
         Cell[][] map = game.getMap();
         int rows = map.length, cols = map[0].length;
 
         // list empty buildings
-        List<BuildingCell> emptyBuildings = new ArrayList<>();
+        List<SettableBuildingCell> emptyBuildings = new ArrayList<>();
         for (int row = 0 ; row < rows ; ++row) {
             for (int col = 0 ; col < cols ; ++col) {
                 if ( map[row][col].getCellType() == CellType.BUILDING ) {
-                    BuildingCell building = (BuildingCell) map[row][col];
-                    if ( building.getGarbage().isEmpty() ) {
+                    SettableBuildingCell building = (SettableBuildingCell) map[row][col];
+                    if ( building.isEmpty() ) {
                         emptyBuildings.add(building);
                     }
                 }

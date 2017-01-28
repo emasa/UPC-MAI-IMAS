@@ -36,4 +36,8 @@ public class SettableBuildingCell extends BuildingCell {
         }
         garbage.put(type, amount);
     }
+    
+    public Boolean isEmpty() {
+        return garbage.isEmpty();
+    }
 }
