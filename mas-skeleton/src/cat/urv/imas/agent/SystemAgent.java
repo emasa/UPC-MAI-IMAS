@@ -17,6 +17,7 @@
  */
 package cat.urv.imas.agent;
 
+import cat.urv.imas.behaviour.system.NewGarbageBehaviour;
 import cat.urv.imas.onthology.InitialGameSettings;
 import cat.urv.imas.onthology.GameSettings;
 import cat.urv.imas.gui.GraphicInterface;
@@ -182,8 +183,11 @@ public class SystemAgent extends ImasAgent {
 
         this.addBehaviour(new RequestResponseBehaviour(this, mt));
 
+        this.addBehaviour(new NewGarbageBehaviour(this));
+        
         // Setup finished. When the last inform is received, the agent itself will add
         // a behaviour to send/receive actions
+        
     }
     
     public void updateGUI() {
