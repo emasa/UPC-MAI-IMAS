@@ -195,7 +195,8 @@ public class SystemAgent extends ImasAgent {
         MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
 
         this.addBehaviour(new RequestResponseBehaviour(this, mt));
-        // create new gargabage with probability one
+
+        // create new garbage with probability one
         this.addBehaviour(new NewGarbageBehaviour(this, 1.0f));
         
         // Setup finished. When the last inform is received, the agent itself will add
