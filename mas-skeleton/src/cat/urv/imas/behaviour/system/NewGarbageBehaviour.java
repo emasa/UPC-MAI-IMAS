@@ -16,7 +16,6 @@ import jade.core.behaviours.OneShotBehaviour;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
-import java.util.Random;
 
 /**
  *
@@ -26,9 +25,18 @@ public class NewGarbageBehaviour extends OneShotBehaviour {
 
     final GarbageType[] GARBAGE_TYPES = new GarbageType[] 
     {GarbageType.PLASTIC, GarbageType.PAPER, GarbageType.GLASS};
+
+    private final float overrideNewGarbageProbability;
     
-    public NewGarbageBehaviour(SystemAgent agent) {
+    public NewGarbageBehaviour(SystemAgent agent, float newGarbageProbability) {
         super(agent);
+        // override new garbage probability (useful for the initial step)
+        this.overrideNewGarbageProbability = newGarbageProbability;
+    }
+    
+    public NewGarbageBehaviour(SystemAgent agent){
+        super(agent);
+        this.overrideNewGarbageProbability = -1;        
     }
     
     @Override
@@ -36,19 +44,22 @@ public class NewGarbageBehaviour extends OneShotBehaviour {
         SystemAgent agent = (SystemAgent)this.getAgent();
         GameSettings game = agent.getGame();
         
-        // TODO: temporary, random generator can not be created here
-        long seed = (long) agent.getGame().getSeed();
-        Random randomGen = new Random(seed);
+        double newGarbageProbability = this.overrideNewGarbageProbability;
+        if (this.overrideNewGarbageProbability < 0.0) {
+            // in game settings the probability is in range [0, 100]
+            game.setNewGarbageProbability(50);
+            newGarbageProbability = game.getNewGarbageProbability()/100.0;
+            agent.log("Using default newGarbageProbability " + newGarbageProbability);
+        }
         
         // check if new garbage will be created (with a given probability)
-        if ( randomGen.nextFloat() > game.getNewGarbageProbability() ) {
+        if ( agent.getRandom().nextFloat() > newGarbageProbability) {
+            agent.log("No garbage will be created in this step");
             return;
         }
-
         // shuffle the list of empty buildings and select those on the top
         List<BuildingCell> emptyBuildings = getEmptyBuildings(game);
-        Collections.shuffle(emptyBuildings, randomGen);
-
+        Collections.shuffle(emptyBuildings, agent.getRandom());
         // stop when maximum number of buildings with new garbage is reached
         // or there are not more empty buildings 
         for (int building_idx = 0 , numberOfBuildingsWithNewGargabe = 0 ; 
@@ -59,11 +70,10 @@ public class NewGarbageBehaviour extends OneShotBehaviour {
              ++building_idx , ++numberOfBuildingsWithNewGargabe) {
  
             // cast to SettableBuildingCell (only allowed to the SystemAgent)
-            SettableBuildingCell building = (SettableBuildingCell) emptyBuildings.get(building_idx);
-            
+            SettableBuildingCell building = (SettableBuildingCell) emptyBuildings.get(building_idx);            
             // decide new amount and new type of garbage randomly
-            int newAmount = randomGen.nextInt(game.getMaxAmountOfNewGargabe() + 1);
-            GarbageType newType = GARBAGE_TYPES[randomGen.nextInt(3)];
+            int newAmount = agent.getRandom().nextInt(game.getMaxAmountOfNewGargabe() + 1);
+            GarbageType newType = GARBAGE_TYPES[agent.getRandom().nextInt(3)];
             building.setGarbage(newType, newAmount);
             
             agent.log("New garbage created at: " + building);
@@ -74,6 +84,7 @@ public class NewGarbageBehaviour extends OneShotBehaviour {
         
         Cell[][] map = game.getMap();
         int rows = map.length, cols = map[0].length;
+
         // list empty buildings
         List<BuildingCell> emptyBuildings = new ArrayList<>();
         for (int row = 0 ; row < rows ; ++row) {

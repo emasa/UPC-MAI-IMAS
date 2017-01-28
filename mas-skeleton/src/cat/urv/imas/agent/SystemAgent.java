@@ -32,7 +32,7 @@ import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import java.util.List;
 import java.util.Map;
-import static jdk.nashorn.internal.objects.NativeArray.map;
+import java.util.Random;
 
 
 /**
@@ -56,6 +56,7 @@ public class SystemAgent extends ImasAgent {
      * round.
      */
     private AID coordinatorAgent;
+    private Random random;
 
     /**
      * Builds the System agent.
@@ -102,6 +103,15 @@ public class SystemAgent extends ImasAgent {
     }
     
     /**
+     * Gets the random object instanciated with seed from the game settings.
+     *
+     * @return random.
+     */    
+    public Random getRandom(){
+        return this.random;
+    }
+    
+    /**
      * Agent setup method - called when it first come on-line. Configuration of
      * language to use, ontology and initialization of behaviours.
      */
@@ -132,6 +142,9 @@ public class SystemAgent extends ImasAgent {
         this.game = InitialGameSettings.load("game.settings");
         log("Initial configuration settings loaded");
         
+        // Instantiate random object with seed from the game settings
+        this.random = new Random((long) this.game.getSeed());
+                
         ContainerController cc = this.getContainerController();
 
         // 3. Load GUI
@@ -182,8 +195,8 @@ public class SystemAgent extends ImasAgent {
         MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
 
         this.addBehaviour(new RequestResponseBehaviour(this, mt));
-
-        this.addBehaviour(new NewGarbageBehaviour(this));
+        // create new gargabage with probability one
+        this.addBehaviour(new NewGarbageBehaviour(this, 1.0f));
         
         // Setup finished. When the last inform is received, the agent itself will add
         // a behaviour to send/receive actions
