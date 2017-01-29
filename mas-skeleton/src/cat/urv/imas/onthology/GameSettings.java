@@ -211,8 +211,11 @@ public class GameSettings implements java.io.Serializable {
                     this.get(y, x).getCellType() == CellType.BUILDING ) {
                     
                     BuildingCell building = (BuildingCell) this.get(y, x);
-                    // detectGarbage should be use to find new garbage (only scouts)
-                    if ( !building.detectGarbage().isEmpty() ) {
+                    // list garbage that was previously undetected (building 
+                    // declared as empty) but after detecting now it is found
+                    // TODO: no estoy seguro si esta deberia ser la condicion
+                    if (building.getGarbage().isEmpty() &&
+                        !building.detectGarbage().isEmpty() ) {
                         buildingsWithGarbage.add(building);
                     }
                 }
