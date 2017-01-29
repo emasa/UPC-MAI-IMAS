@@ -15,14 +15,21 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package cat.urv.imas.behaviour.coordinator;
+package cat.urv.imas.behaviour.scout;
 
+import cat.urv.imas.behaviour.coordinator.*;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import cat.urv.imas.agent.CoordinatorAgent;
 import cat.urv.imas.agent.ScoutAgent;
+import cat.urv.imas.agent.ScoutCoordinatorAgent;
+import cat.urv.imas.map.Cell;
 import cat.urv.imas.onthology.GameSettings;
+import jade.lang.acl.UnreadableException;
+import java.util.ArrayList;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Behaviour for the Coordinator agent to deal with AGREE messages.
@@ -35,9 +42,16 @@ import cat.urv.imas.onthology.GameSettings;
  */
 public class RequesterBehaviour extends AchieveREInitiator {
 
-    public RequesterBehaviour(CoordinatorAgent agent, ACLMessage requestMsg) {
-        super(agent, requestMsg);
-        agent.log("Started behaviour to deal with AGREEs");
+    public RequesterBehaviour(ScoutAgent agent) {
+        super(agent, agent.receive());
+        try{
+            ACLMessage msg = agent.receive();
+            agent.log("Started behaviour to deal with AGREEs");
+            ArrayList<Cell> adjacentCells = (ArrayList<Cell>) msg.getContentObject();
+            System.out.println( " - " + agent.getLocalName() + " <- " + adjacentCells.size() );
+        } catch (UnreadableException | NullPointerException ex) {
+            Logger.getLogger(ScoutCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
+        }
     }
 
     /**

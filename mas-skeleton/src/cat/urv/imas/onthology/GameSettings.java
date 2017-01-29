@@ -19,6 +19,8 @@ package cat.urv.imas.onthology;
 
 import cat.urv.imas.agent.AgentType;
 import cat.urv.imas.map.Cell;
+import cat.urv.imas.map.StreetCell;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.xml.bind.annotation.XmlElement;
@@ -122,6 +124,16 @@ public class GameSettings implements java.io.Serializable {
         if (check != 7) {
             throw new Error(getClass().getCanonicalName() + " : Not all garbage types are treated in this map.");
         }
+    }
+    
+    public ArrayList<Cell> getAdjacentCells(StreetCell cell) {
+        ArrayList<Cell> adjacentCells = new ArrayList<>();
+
+        for (int i = cell.getCol()-1; i <= cell.getCol()+1; i++)
+            for (int j = cell.getRow()-1; j <= cell.getRow()+1; j++)
+                if((i >= 0 && i < this.getMap()[0].length) && (j >= 0 && j < this.getMap().length)&& (j != cell.getRow() || i != cell.getCol()))
+                    adjacentCells.add(this.get(j, i));
+        return adjacentCells;
     }
 
     public int getSimulationSteps() {

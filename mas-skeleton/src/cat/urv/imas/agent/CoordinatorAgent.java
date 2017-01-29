@@ -83,7 +83,7 @@ public class CoordinatorAgent extends ImasAgent {
             doDelete();
         }
         
-        SequentialBehaviour initialBehaviour = new SequentialBehaviour(this){
+        SequentialBehaviour stepBehaviour = new SequentialBehaviour(this){
             public int onEnd() {
                 reset();
                 myAgent.addBehaviour(this);
@@ -101,21 +101,20 @@ public class CoordinatorAgent extends ImasAgent {
         // searchAgent is a blocking method, so we will obtain always a correct AID
 
         /* ********************************************************************/
-        ACLMessage initialRequest = new ACLMessage(ACLMessage.REQUEST);
-        initialRequest.clearAllReceiver();
-        initialRequest.addReceiver(this.systemAgent);
-        initialRequest.setProtocol(InteractionProtocol.FIPA_REQUEST);
+        ACLMessage stepRequest = new ACLMessage(ACLMessage.REQUEST);
+        stepRequest.clearAllReceiver();
+        stepRequest.addReceiver(this.systemAgent);
+        stepRequest.setProtocol(InteractionProtocol.FIPA_REQUEST);
         log("Request message to agent");
         try {
-            initialRequest.setContent(MessageContent.GET_MAP);
-            log("Request message content:" + initialRequest.getContent());
+            stepRequest.setContent(MessageContent.GET_MAP);
+            log("Request message content:" + stepRequest.getContent());
         } catch (Exception e) {
             e.printStackTrace();
         }
         
-        initialBehaviour.addSubBehaviour(new RequesterBehaviour(this, initialRequest));
-        initialBehaviour.addSubBehaviour(new CyclicBehaviour(this) 
-            {
+        stepBehaviour.addSubBehaviour(new RequesterBehaviour(this, stepRequest));
+        stepBehaviour.addSubBehaviour(new CyclicBehaviour(this) {
                 public void action() {
                     CoordinatorAgent currentAgent = (CoordinatorAgent) myAgent;
                     ACLMessage forward = new ACLMessage(ACLMessage.INFORM);
@@ -134,7 +133,7 @@ public class CoordinatorAgent extends ImasAgent {
             });
 
         //we add a behaviour that sends the message and waits for an answer
-        this.addBehaviour(initialBehaviour);
+        this.addBehaviour(stepBehaviour);
 
         // setup finished. When we receive the last inform, the agent itself will add
         // a behaviour to send/receive actions

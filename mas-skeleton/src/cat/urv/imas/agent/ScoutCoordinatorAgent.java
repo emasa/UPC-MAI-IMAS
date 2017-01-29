@@ -6,15 +6,19 @@
 package cat.urv.imas.agent;
 
 import static cat.urv.imas.agent.ImasAgent.OWNER;
+import cat.urv.imas.behaviour.scoutcoordinator.RequestGarbageBehaviour;
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.GameSettings;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
+import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.SequentialBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
+import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.UnreadableException;
 import java.util.ArrayList;
@@ -47,6 +51,10 @@ public class ScoutCoordinatorAgent extends ImasAgent{
 
     @Override
     protected void setup() {
+        /* ** Very Important Line (VIL) ***************************************/
+        this.setEnabledO2ACommunication(true, 1);
+        /* ********************************************************************/
+        
         // Register the agent to the DF
         ServiceDescription sd1 = new ServiceDescription();
         sd1.setType(AgentType.SCOUT_COORDINATOR.toString());
@@ -65,33 +73,41 @@ public class ScoutCoordinatorAgent extends ImasAgent{
             doDelete();
         }
         
-        this.addBehaviour(new CyclicBehaviour(this) {
+        SequentialBehaviour stepBehaviour = new SequentialBehaviour(this){
+            @Override
+            public int onEnd() {
+                reset();
+//                System.out.println(".onEnd() finalizo");
+                myAgent.addBehaviour(this);
+                return super.onEnd();
+            }
+        };
+        
+        stepBehaviour.addSubBehaviour(new OneShotBehaviour(this) {
             public void action() {
                 ACLMessage msg= receive();
-                if (msg!=null){
+                if (msg != null){
                     GameSettings game;
                     try {
                         ScoutCoordinatorAgent currentAgent = (ScoutCoordinatorAgent) myAgent;
                         game = (GameSettings) msg.getContentObject();
                         currentAgent.setGame(game);
-                        for (Map.Entry<AgentType, List<Cell>> en : game.getAgentList().entrySet()) {
-                            AgentType agent = en.getKey();
-                            List<Cell> agentsCells = en.getValue();
-                            if(agent.equals(AgentType.SCOUT)){
-                                for (int i = 0; i < agentsCells.size(); i++) {
-                                    StreetCell cell = (StreetCell) agentsCells.get(i);
-                                    ACLMessage cellsInform = new ACLMessage(ACLMessage.INFORM);
-                                    cellsInform.addReceiver(cell.getAgent().getAID());
-                                    try {
-                                        cellsInform.setContentObject(getAdjacentCells(game, cell));
-                                        currentAgent.send(cellsInform);
-                                        currentAgent.log("Adjacent cells sent to Scout "+ cell.getAgent().getAID().getLocalName()+".");
-                                    } catch (Exception e) {
-                                        cellsInform.setPerformative(ACLMessage.FAILURE);
-                                        currentAgent.errorLog(e.toString());
-                                        e.printStackTrace();
-                                    }
-                                }
+                        currentAgent.log("Game settings received.");
+                        List<Cell> agentsCells = game.getAgentList().get(AgentType.SCOUT);
+                        for (int i = 0; i < agentsCells.size(); i++) {
+                            StreetCell cell = (StreetCell) agentsCells.get(i);
+                            ACLMessage cellsInform = new ACLMessage(ACLMessage.REQUEST);
+                            cellsInform.clearAllReceiver();
+                            cellsInform.addReceiver(cell.getAgent().getAID());
+                            cellsInform.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+                            try {
+                                cellsInform.setContentObject(game.getAdjacentCells(cell));
+                                SequentialBehaviour stepBehaviour = (SequentialBehaviour)this.getParent();
+                                stepBehaviour.addSubBehaviour(new RequestGarbageBehaviour(currentAgent, cellsInform));
+                            } catch (Exception e) {
+                                cellsInform.setPerformative(ACLMessage.FAILURE);
+                                currentAgent.errorLog(e.toString());
+                                e.printStackTrace();
                             }
                         }
                     } catch (UnreadableException ex) {
@@ -100,17 +116,9 @@ public class ScoutCoordinatorAgent extends ImasAgent{
                 }
                 block();
             }
-
-            private ArrayList<Cell> getAdjacentCells(GameSettings game, StreetCell cell) {
-                ArrayList<Cell> adjacentCells = new ArrayList<>();
-                
-                for (int i = cell.getCol()-1; i <= cell.getCol()+1; i++)
-                    for (int j = cell.getRow()-1; j <= cell.getRow()+1; j++)
-                        if((i >= 0 && i < game.getMap()[0].length) && (j >= 0 && j < game.getMap().length)&& (j != cell.getRow() || i != cell.getCol()))
-                            adjacentCells.add(game.get(j, i));
-                return adjacentCells;
-            }
         });
+
+        this.addBehaviour(stepBehaviour);
     }
     
     /**

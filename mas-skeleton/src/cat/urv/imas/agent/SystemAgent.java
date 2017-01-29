@@ -169,9 +169,9 @@ public class SystemAgent extends ImasAgent {
         }
 
         // search CoordinatorAgent
-        ServiceDescription searchCriterion = new ServiceDescription();
-        searchCriterion.setType(AgentType.COORDINATOR.toString());
-        this.coordinatorAgent = UtilsAgents.searchAgent(this, searchCriterion);
+//        ServiceDescription searchCriterion = new ServiceDescription();
+//        searchCriterion.setType(AgentType.COORDINATOR.toString());
+//        this.coordinatorAgent = UtilsAgents.searchAgent(this, searchCriterion);
         // searchAgent is a blocking method, so we will obtain always a correct AID
 
         // add behaviours
