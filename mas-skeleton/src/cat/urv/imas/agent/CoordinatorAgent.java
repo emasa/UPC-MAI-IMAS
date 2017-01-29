@@ -61,7 +61,6 @@ public class CoordinatorAgent extends ImasAgent {
      */
     @Override
     protected void setup() {
-
         /* ** Very Important Line (VIL) ***************************************/
         this.setEnabledO2ACommunication(true, 1);
         /* ********************************************************************/
@@ -75,6 +74,7 @@ public class CoordinatorAgent extends ImasAgent {
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.addServices(sd1);
         dfd.setName(getAID());
+        
         try {
             DFService.register(this, dfd);
             log("Registered to the DF");
@@ -82,20 +82,23 @@ public class CoordinatorAgent extends ImasAgent {
             System.err.println(getLocalName() + " registration with DF unsucceeded. Reason: " + e.getMessage());
             doDelete();
         }
-       SequentialBehaviour coordinatorBehaviour = new SequentialBehaviour(this){
+        
+        SequentialBehaviour initialBehaviour = new SequentialBehaviour(this){
             public int onEnd() {
                 reset();
                 myAgent.addBehaviour(this);
                 return super.onEnd();
             }
         };
+       
         // search SystemAgent
         ServiceDescription searchCriterion = new ServiceDescription();
         searchCriterion.setType(AgentType.SYSTEM.toString());
         this.systemAgent = UtilsAgents.searchAgent(this, searchCriterion);
-        // searchAgent is a blocking method, so we will obtain always a correct AID
+        // search ScoutCoordinatorAgent
         searchCriterion.setType(AgentType.SCOUT_COORDINATOR.toString());
         this.scoutCoordinatorAgent = UtilsAgents.searchAgent(this, searchCriterion);
+        // searchAgent is a blocking method, so we will obtain always a correct AID
 
         /* ********************************************************************/
         ACLMessage initialRequest = new ACLMessage(ACLMessage.REQUEST);
@@ -110,8 +113,8 @@ public class CoordinatorAgent extends ImasAgent {
             e.printStackTrace();
         }
         
-        coordinatorBehaviour.addSubBehaviour(new RequesterBehaviour(this, initialRequest));
-        coordinatorBehaviour.addSubBehaviour(new CyclicBehaviour(this) 
+        initialBehaviour.addSubBehaviour(new RequesterBehaviour(this, initialRequest));
+        initialBehaviour.addSubBehaviour(new CyclicBehaviour(this) 
             {
                 public void action() {
                     CoordinatorAgent currentAgent = (CoordinatorAgent) myAgent;
@@ -131,7 +134,7 @@ public class CoordinatorAgent extends ImasAgent {
             });
 
         //we add a behaviour that sends the message and waits for an answer
-        this.addBehaviour(coordinatorBehaviour);
+        this.addBehaviour(initialBehaviour);
 
         // setup finished. When we receive the last inform, the agent itself will add
         // a behaviour to send/receive actions
