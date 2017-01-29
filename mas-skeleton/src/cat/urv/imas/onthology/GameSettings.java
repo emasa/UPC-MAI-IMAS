@@ -18,7 +18,10 @@
 package cat.urv.imas.onthology;
 
 import cat.urv.imas.agent.AgentType;
+import cat.urv.imas.map.BuildingCell;
 import cat.urv.imas.map.Cell;
+import cat.urv.imas.map.CellType;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import javax.xml.bind.annotation.XmlElement;
@@ -193,10 +196,30 @@ public class GameSettings implements java.io.Serializable {
     }
     
     public Cell[] detectBuildingsWithGarbage(int row, int col) {
-        //TODO: find all surrounding cells to (row,col) that are
+        //      find all surrounding cells to (row,col) that are
         //      buildings and have garbage on it.
-        //      Use: BuildingCell.detectGarbage() to do so.
-        return null;
+        //      Use: BuildingCell.detectGarbage() to do so.        
+        int rows = map.length, cols = map[0].length;
+        ArrayList<Cell> buildingsWithGarbage = new ArrayList<>();
+
+        for (int dy = -1 ; dy <= 1 ; ++dy ) {
+            for (int dx = -1 ; dx <= 1 ; ++dx ) {
+                int y = row + dy, x = col + dx;
+                // check bounderies and filter surrounding cells containing a building
+                if (0 <= y && y < rows && 0 <= x && x < cols && 
+                    row != y && col != x &&
+                    this.get(y, x).getCellType() == CellType.BUILDING ) {
+                    
+                    BuildingCell building = (BuildingCell) this.get(y, x);
+                    // detectGarbage should be use to find new garbage (only scouts)
+                    if ( !building.detectGarbage().isEmpty() ) {
+                        buildingsWithGarbage.add(building);
+                    }
+                }
+            }
+        }
+        // return a array with the buildings 
+        return buildingsWithGarbage.toArray(new Cell[buildingsWithGarbage.size()]);
     }
     
     /**
