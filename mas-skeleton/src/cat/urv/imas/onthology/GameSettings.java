@@ -224,7 +224,7 @@ public class GameSettings implements java.io.Serializable {
     }
     
     public String getShortString() {
-        //TODO: list of agents
+            //TODO: list of agents
         return "Game settings: agent related string";
     }
     
