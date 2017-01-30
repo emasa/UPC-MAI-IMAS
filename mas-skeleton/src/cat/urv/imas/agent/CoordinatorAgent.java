@@ -57,6 +57,10 @@ public class CoordinatorAgent extends ImasAgent {
     /**
      * Scout Coordinator agent id.
      */
+    private AID hcAgent;
+    /**
+     * System agent id.
+     */    
     private AID scoutCoordinatorAgent;
     /**
      * Harvester Coordinator agent id.
@@ -126,11 +130,16 @@ public class CoordinatorAgent extends ImasAgent {
             e.printStackTrace();
         }
         
+        //we add a behaviour that sends the message and waits for an answer
+        this.addBehaviour(new RequesterBehaviour(this, gameRequest));
+        // setup finished. When we receive the last inform, the agent itself will add
+        // a behaviour to send/receive actions
+        
         /* ********************************************************************/
         // contract net system
         ServiceDescription searchHC = new ServiceDescription();     
         searchHC.setType(AgentType.HARVESTER_COORDINATOR.toString());
-        this.harvesterCoordinatorAgent = UtilsAgents.searchAgent(this, searchHC);    
+        this.hcAgent = UtilsAgents.searchAgent(this, searchHC);    
         
         // TODO: CHANGE THIS FOR GARBAGE LIST
         ////////////// Dummy SettableBuildingCell 
@@ -140,11 +149,15 @@ public class CoordinatorAgent extends ImasAgent {
         
         // Fill the CFP message
         ACLMessage contract = new ACLMessage(ACLMessage.CFP);
+        contract.addReceiver(this.hcAgent);
+        contract.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
+        // We want to receive a reply in 10 secs
+        contract.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
+        contract.setConversationId("C:dummy");
         contract.addReceiver(this.harvesterCoordinatorAgent);
         contract.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
         // We want to receive a reply in 10 secs
         contract.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
-//        contract.setContent(content);                             
         
         try {
             contract.setContentObject(celda);
@@ -152,19 +165,19 @@ public class CoordinatorAgent extends ImasAgent {
             Logger.getLogger(CoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
         }
         log("ContractNet Started");
-        String content = celda.getMapMessage()+" in R"+celda.getRow()+" C"+celda.getCol();        
-        System.out.println("1. Coordinator Agent sent a ContractNet to collect "+content);
+        System.out.println("1. "+getLocalName()+": sent contract "+contract.getConversationId());
         
         this.addBehaviour(new ContractNetInitiator(this, contract) {			
             @Override
             protected void handlePropose(ACLMessage propose, Vector v) {
                 // Receive Proposal
-                System.out.println("3. Agent "+propose.getSender().getName()+" Proposed to collect: "+propose.getContent());             
+
+                System.out.println("3. "+propose.getSender().getName()+": proposed a coalition on "+propose.getConversationId());
             }
 
             @Override
             protected void handleRefuse(ACLMessage refuse) {
-                System.out.println("3. Agent "+refuse.getSender().getName()+" refused");
+                System.out.println("3. "+refuse.getSender().getName()+": refused "+refuse.getConversationId());
             }
 
             @Override
@@ -189,18 +202,19 @@ public class CoordinatorAgent extends ImasAgent {
                     accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
                     acceptances.addElement(accept);
                     accept.setContent(proposal.getContent()); 
-                    System.out.println("4. "+getLocalName()+" Accepted proposal: "+proposal.getContent());
+                    System.out.println("4. "+getLocalName()+": accepted proposal "+proposal.getContent()+" for contract "+proposal.getConversationId());
                 }             
             }
                         
             @Override
             protected void handleInform(ACLMessage inform) {
-                System.out.println("8. "+inform.getSender().getName()+" successfully performed: "+inform.getContent());
+                System.out.println("8. "+inform.getSender().getName()+" successfully performed "+inform.getConversationId());
             }
         });
         
         //we add a behaviour that sends the message and waits for an answer
         this.addBehaviour(new RequesterBehaviour(this, gameRequest));
+
         // setup finished. When we receive the last inform, the agent itself will add
         // a behaviour to send/receive actions
     }
