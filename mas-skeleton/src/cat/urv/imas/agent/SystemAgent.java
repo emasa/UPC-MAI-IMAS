@@ -31,8 +31,6 @@ import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import java.util.List;
 import java.util.Map;
-import static jdk.nashorn.internal.objects.NativeArray.map;
-
 
 /**
  * System agent that controls the GUI and loads initial configuration settings.
@@ -46,8 +44,8 @@ public class SystemAgent extends ImasAgent {
      */
     private GraphicInterface gui;
     /**
-     * Game settings. At the very beginning, it will contain the loaded
-     * initial configuration settings.
+     * Game settings. At the very beginning, it will contain the loaded initial
+     * configuration settings.
      */
     private GameSettings game;
     /**
@@ -64,21 +62,21 @@ public class SystemAgent extends ImasAgent {
     }
 
     /**
-     * A message is shown in the log area of the GUI, as well as in the 
-     * stantard output.
+     * A message is shown in the log area of the GUI, as well as in the stantard
+     * output.
      *
      * @param log String to show
      */
     @Override
     public void log(String log) {
         if (gui != null) {
-            gui.log(getLocalName()+ ": " + log + "\n");
+            gui.log(getLocalName() + ": " + log + "\n");
         }
         super.log(log);
     }
-    
+
     /**
-     * An error message is shown in the log area of the GUI, as well as in the 
+     * An error message is shown in the log area of the GUI, as well as in the
      * error output.
      *
      * @param error Error to show
@@ -86,7 +84,7 @@ public class SystemAgent extends ImasAgent {
     @Override
     public void errorLog(String error) {
         if (gui != null) {
-            gui.log("ERROR: " + getLocalName()+ ": " + error + "\n");
+            gui.log("ERROR: " + getLocalName() + ": " + error + "\n");
         }
         super.errorLog(error);
     }
@@ -99,7 +97,7 @@ public class SystemAgent extends ImasAgent {
     public GameSettings getGame() {
         return this.game;
     }
-    
+
     /**
      * Agent setup method - called when it first come on-line. Configuration of
      * language to use, ontology and initialization of behaviours.
@@ -115,7 +113,7 @@ public class SystemAgent extends ImasAgent {
         sd1.setType(AgentType.SYSTEM.toString());
         sd1.setName(getLocalName());
         sd1.setOwnership(OWNER);
-        
+
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.addServices(sd1);
         dfd.setName(getAID());
@@ -130,7 +128,7 @@ public class SystemAgent extends ImasAgent {
         // 2. Load game settings.
         this.game = InitialGameSettings.load("game.settings");
         log("Initial configuration settings loaded");
-        
+
         ContainerController cc = this.getContainerController();
 
         // 3. Load GUI
@@ -141,24 +139,24 @@ public class SystemAgent extends ImasAgent {
             agentController.start();
             agentController = cc.createNewAgent("Scout Coordinator Agent", ScoutCoordinatorAgent.class.getName(), null);
             agentController.start();
-            for (Map.Entry<AgentType,List<Cell>> entry : game.getAgentList().entrySet()) {
+            for (Map.Entry<AgentType, List<Cell>> entry : game.getAgentList().entrySet()) {
                 String currentKey = entry.getKey().getShortString();
                 int i = 1;
-                if(currentKey.equals(AgentType.HARVESTER.getShortString())){
+                if (currentKey.equals(AgentType.HARVESTER.getShortString())) {
                     for (Cell cell : entry.getValue()) {
-                        Object[] params = {cell,this.game.getAllowedGarbageTypePerHarvester()[i-1]};
-                        agentController = cc.createNewAgent(entry.getKey().getShortString()+i, HarvesterAgent.class.getName(), params);
+                        Object[] params = {cell, this.game.getAllowedGarbageTypePerHarvester()[i - 1]};
+                        agentController = cc.createNewAgent(entry.getKey().getShortString() + i, HarvesterAgent.class.getName(), params);
                         agentController.start();
                         i++;
                     }
-                }else  if(currentKey.equals(AgentType.SCOUT.getShortString())){
+                } else if (currentKey.equals(AgentType.SCOUT.getShortString())) {
                     for (Cell cell : entry.getValue()) {
                         Object[] params = {cell};
-                        agentController = cc.createNewAgent(entry.getKey().getShortString()+i, ScoutAgent.class.getName(), params);
+                        agentController = cc.createNewAgent(entry.getKey().getShortString() + i, ScoutAgent.class.getName(), params);
                         agentController.start();
                         i++;
                     }
-                }else{
+                } else {
                     // nunca entra
                     log(entry.getValue().toString());
                 }
@@ -171,9 +169,9 @@ public class SystemAgent extends ImasAgent {
         }
 
         // search CoordinatorAgent
-        ServiceDescription searchCriterion = new ServiceDescription();
-        searchCriterion.setType(AgentType.COORDINATOR.toString());
-        this.coordinatorAgent = UtilsAgents.searchAgent(this, searchCriterion);
+//        ServiceDescription searchCriterion = new ServiceDescription();
+//        searchCriterion.setType(AgentType.COORDINATOR.toString());
+//        this.coordinatorAgent = UtilsAgents.searchAgent(this, searchCriterion);
         // searchAgent is a blocking method, so we will obtain always a correct AID
 
         // add behaviours
@@ -185,7 +183,7 @@ public class SystemAgent extends ImasAgent {
         // Setup finished. When the last inform is received, the agent itself will add
         // a behaviour to send/receive actions
     }
-    
+
     public void updateGUI() {
         this.gui.updateGame();
     }

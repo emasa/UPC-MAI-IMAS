@@ -53,6 +53,10 @@ public class CoordinatorAgent extends ImasAgent {
      * System agent id.
      */
     private AID systemAgent;
+    /**
+     * System agent id.
+     */
+    private AID scoutCoordinatorAgent;
 
     /**
      * Builds the coordinator agent.
@@ -67,7 +71,6 @@ public class CoordinatorAgent extends ImasAgent {
      */
     @Override
     protected void setup() {
-
         /* ** Very Important Line (VIL) ***************************************/
         this.setEnabledO2ACommunication(true, 1);
         /* ********************************************************************/
@@ -81,6 +84,7 @@ public class CoordinatorAgent extends ImasAgent {
         DFAgentDescription dfd = new DFAgentDescription();
         dfd.addServices(ca);
         dfd.setName(getAID());
+        
         try {
             DFService.register(this, dfd);
             log("Registered to the DF");
@@ -88,25 +92,29 @@ public class CoordinatorAgent extends ImasAgent {
             System.err.println(getLocalName() + " registration with DF unsucceeded. Reason: " + e.getMessage());
             doDelete();
         }
-
+       
         // search SystemAgent
         ServiceDescription searchCriterion = new ServiceDescription();
         searchCriterion.setType(AgentType.SYSTEM.toString());
         this.systemAgent = UtilsAgents.searchAgent(this, searchCriterion);
+        // search ScoutCoordinatorAgent
+        searchCriterion.setType(AgentType.SCOUT_COORDINATOR.toString());
+        this.scoutCoordinatorAgent = UtilsAgents.searchAgent(this, searchCriterion);
         // searchAgent is a blocking method, so we will obtain always a correct AID
 
         /* ********************************************************************/
-        ACLMessage initialRequest = new ACLMessage(ACLMessage.REQUEST);
-        initialRequest.clearAllReceiver();
-        initialRequest.addReceiver(this.systemAgent);
-        initialRequest.setProtocol(InteractionProtocol.FIPA_REQUEST);
+        ACLMessage gameRequest = new ACLMessage(ACLMessage.REQUEST);
+        gameRequest.clearAllReceiver();
+        gameRequest.addReceiver(this.systemAgent);
+        gameRequest.setProtocol(InteractionProtocol.FIPA_REQUEST);
         log("Request message to agent");
         try {
-            initialRequest.setContent(MessageContent.GET_MAP);
-            log("Request message content:" + initialRequest.getContent());
+            gameRequest.setContent(MessageContent.GET_MAP);
+            log("Request message content:" + gameRequest.getContent());
         } catch (Exception e) {
             e.printStackTrace();
         }
+<<<<<<< HEAD
         //we add a behaviour that sends the message and waits for an answer
         this.addBehaviour(new RequesterBehaviour(this, initialRequest));
         // setup finished. When we receive the last inform, the agent itself will add
@@ -178,6 +186,10 @@ public class CoordinatorAgent extends ImasAgent {
                 System.out.println("8. "+inform.getSender().getName()+" successfully performed: "+inform.getContent());
             }
         });
+=======
+        
+        this.addBehaviour(new RequesterBehaviour(this, gameRequest));
+>>>>>>> 4d896fe91bf98a6b879695a8d8cb2807e7055d59
     }
 
     /**
@@ -198,4 +210,24 @@ public class CoordinatorAgent extends ImasAgent {
         return this.game;
     }
 
+<<<<<<< HEAD
 }
+=======
+    public AID getScoutCoordinatorAgent() {
+        return scoutCoordinatorAgent;
+    }
+
+    public void setScoutCoordinatorAgent(AID scoutCoordinatorAgent) {
+        this.scoutCoordinatorAgent = scoutCoordinatorAgent;
+    }
+
+    public AID getSystemAgent() {
+        return systemAgent;
+    }
+
+    public void setSystemAgent(AID systemAgent) {
+        this.systemAgent = systemAgent;
+    }
+
+}
+>>>>>>> 4d896fe91bf98a6b879695a8d8cb2807e7055d59
