@@ -26,7 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 /**
  *
- * @author Daniel
+ * @author Daniel, Dario, Pablo, Angel y Emanuel
  */
 public class HarvesterCoordinatorAgent extends ImasAgent{
      /**

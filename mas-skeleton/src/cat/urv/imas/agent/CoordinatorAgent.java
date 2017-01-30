@@ -31,6 +31,7 @@ import jade.domain.FIPAAgentManagement.*;
 import jade.domain.FIPANames.InteractionProtocol;
 import jade.lang.acl.*;
 import java.io.IOException;
+import java.util.ArrayList;
 
 import java.util.Date;
 import java.util.Vector;
@@ -61,6 +62,12 @@ public class CoordinatorAgent extends ImasAgent {
      * Harvester Coordinator agent id.
      */
     private AID harvesterCoordinatorAgent;
+    
+    ArrayList<BuildingCell> garbageFound;
+    
+    ArrayList<BuildingCell> garbageCollected;
+    
+    ArrayList<BuildingCell> garbageCollecting;
 
     /**
      * Builds the coordinator agent.
@@ -240,4 +247,40 @@ public class CoordinatorAgent extends ImasAgent {
         this.harvesterCoordinatorAgent = harvesterCoordinatorAgent;
     }
 
+    public ArrayList<BuildingCell> getGarbageFound() {
+        return garbageFound;
+    }
+
+    public void setGarbageFound(ArrayList<BuildingCell> garbageFound) {
+        this.garbageFound = garbageFound;
+    }
+
+    public ArrayList<BuildingCell> getGarbageCollected() {
+        return garbageCollected;
+    }
+
+    public void setGarbageCollected(ArrayList<BuildingCell> garbageCollected) {
+        this.garbageCollected = garbageCollected;
+    }
+
+    public ArrayList<BuildingCell> getGarbageCollecting() {
+        return garbageCollecting;
+    }
+
+    public void setGarbageCollecting(ArrayList<BuildingCell> garbageCollecting) {
+        this.garbageCollecting = garbageCollecting;
+    }
+
+    public void addGarbageFound(ArrayList<BuildingCell> garbageFound) {
+        this.garbageFound.addAll(garbageFound);
+    }
+    
+    public void addGarbageCollecting(BuildingCell garbageCollecting) {
+        this.garbageCollecting.add(garbageCollecting);
+    }
+    
+    public void addGarbageCollected(BuildingCell garbageCollected) {
+        this.garbageCollecting.add(garbageCollected);
+    }
+    
 }
