@@ -18,13 +18,15 @@
 package cat.urv.imas.behaviour.scout;
 
 import cat.urv.imas.agent.ScoutAgent;
-import cat.urv.imas.behaviour.system.*;
-import cat.urv.imas.map.BuildingCell;
+import cat.urv.imas.behaviour.scoutcoordinator.RequestGarbageBehaviour;
 import cat.urv.imas.map.Cell;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREResponder;;
 import cat.urv.imas.onthology.MessageContent;
+import jade.core.AID;
+import jade.domain.FIPANames;
+import jade.lang.acl.UnreadableException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -62,20 +64,25 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
         ScoutAgent agent = (ScoutAgent) this.getAgent();
         ACLMessage reply = msg.createReply();
         try {
-//            Object content = (Object) msg.getContentObject();
             HashMap<String,List<Cell>> content = (HashMap<String,List<Cell>>)msg.getContentObject();
             if (content.keySet().iterator().next().equals(MessageContent.GET_GARBAGE)) {
                 ArrayList<Cell> adjacentCells = (ArrayList<Cell>) content.get(MessageContent.GET_GARBAGE);
                 agent.setAdjacentCells(adjacentCells);
                 agent.log( " - " + myAgent.getLocalName() + " <- " + adjacentCells.size() );
-//                agent.log("Request received");
-                // TODO: seach BuildingCell with garbage
+                // TODO: perform seach of garbage in BuildingCell
+                // TODO: request movement
+                ACLMessage newCell = new ACLMessage(ACLMessage.REQUEST);
+                newCell.clearAllReceiver();
+                newCell.addReceiver(msg.getSender());
+                newCell.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+                agent.log("Request new Cell to agent: " + ((AID)newCell.getAllReceiver().next()).getLocalName());
+                newCell.setContent(MessageContent.NEW_CELL);
+                agent.addBehaviour(new RequestMovementBehaviour(agent, newCell));
                 reply.setPerformative(ACLMessage.AGREE);
             }
-        } catch (Exception e) {
+        } catch (UnreadableException e) {
             reply.setPerformative(ACLMessage.FAILURE);
             agent.errorLog(e.getMessage());
-            e.printStackTrace();
         }
         agent.log("Response being prepared");
         return reply;

@@ -40,4 +40,10 @@ public class MessageContent {
      */
     public static final String GET_SCOUT_STEPS = "Get scout steps";
     
+    /**
+     * Message sent from Scout Coordinator agent to Scout agent to get the
+     * BuildingCells with garbage.
+     */
+    public static final String NEW_CELL = "New cell";
+    
 }

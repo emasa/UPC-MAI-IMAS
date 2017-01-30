@@ -19,7 +19,6 @@ package cat.urv.imas.behaviour.scoutcoordinator;
 
 import cat.urv.imas.agent.AgentType;
 import cat.urv.imas.agent.ScoutCoordinatorAgent;
-import cat.urv.imas.behaviour.system.*;
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.GameSettings;
@@ -27,8 +26,11 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREResponder;
 import cat.urv.imas.onthology.MessageContent;
+import jade.core.AID;
 import jade.core.behaviours.ParallelBehaviour;
 import jade.domain.FIPANames;
+import jade.lang.acl.UnreadableException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -64,38 +66,45 @@ public class StepsResponseBehaviour extends AchieveREResponder {
         ScoutCoordinatorAgent agent = (ScoutCoordinatorAgent)this.getAgent();
         ACLMessage reply = msg.createReply();
         try {
-            HashMap<String,GameSettings> content = (HashMap<String,GameSettings>) msg.getContentObject();
-            if (content.keySet().iterator().next().equals(MessageContent.GET_SCOUT_STEPS)) {
-                agent.log("Request Steps received");
-                GameSettings game = (GameSettings) content.get(MessageContent.GET_SCOUT_STEPS);
-                agent.setGame(game);
-                ParallelBehaviour scoutsSearch = new ParallelBehaviour(agent, ParallelBehaviour.WHEN_ALL){ 
-                    public int onEnd() { 
-                        System.out.println("Behavior finalized with success!"); 
-                        return 0; 
-                    } 
-                };
-                List<Cell> scoutsCells = game.getAgentList().get(AgentType.SCOUT);
-                for (int i = 0; i < scoutsCells.size(); i++) {
-                    StreetCell scoutCell = (StreetCell) scoutsCells.get(i);
-                    ACLMessage cellsInform = new ACLMessage(ACLMessage.REQUEST);
-                    cellsInform.clearAllReceiver();
-                    cellsInform.addReceiver(scoutCell.getAgent().getAID());
-                    cellsInform.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-                    agent.log("Request message to agent: " + scoutCell.getAgent().getAID().getLocalName());
-                    HashMap<String,List<Cell>> contentRequest = new HashMap<>();
-                    contentRequest.put(MessageContent.GET_GARBAGE, game.getAdjacentCells(scoutCell));
-                    cellsInform.setContentObject(contentRequest);
-                    scoutsSearch.addSubBehaviour(new RequestGarbageBehaviour(agent, cellsInform));
+            if(msg.getSender().equals(agent.getCoordinatorAgent())){
+                HashMap<String,GameSettings> content = (HashMap<String,GameSettings>) msg.getContentObject();
+                if (content.keySet().iterator().next().equals(MessageContent.GET_SCOUT_STEPS)) {
+                    agent.log("Request Steps received");
+                    GameSettings game = (GameSettings) content.get(MessageContent.GET_SCOUT_STEPS);
+                    agent.setGame(game);
+                    ParallelBehaviour scoutsSearch = new ParallelBehaviour(agent, ParallelBehaviour.WHEN_ALL){ 
+                        @Override
+                        public int onEnd() { 
+                            System.out.println("Behavior finalized with success!"); 
+                            return 0; 
+                        } 
+                    };
+                    List<Cell> scoutsCells = game.getAgentList().get(AgentType.SCOUT);
+                    for (int i = 0; i < scoutsCells.size(); i++) {
+                        StreetCell scoutCell = (StreetCell) scoutsCells.get(i);
+                        AID scout = scoutCell.getAgent().getAID();
+                        ArrayList<Cell> adjacentCells = game.getAdjacentCells(scoutCell);
+                        ACLMessage cellsInform = new ACLMessage(ACLMessage.REQUEST);
+                        cellsInform.clearAllReceiver();
+                        cellsInform.addReceiver(scout);
+                        cellsInform.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+                        agent.log("Request message to agent: " + scout.getLocalName());
+                        agent.addScoutAdjacentCells(scout, adjacentCells);
+                        HashMap<String,List<Cell>> contentRequest = new HashMap<>();
+                        contentRequest.put(MessageContent.GET_GARBAGE, adjacentCells);
+                        cellsInform.setContentObject(contentRequest);
+                        scoutsSearch.addSubBehaviour(new RequestGarbageBehaviour(agent, cellsInform));
+                    }
+                    agent.addBehaviour(scoutsSearch);
+                    reply.setPerformative(ACLMessage.AGREE);
                 }
-                agent.addBehaviour(scoutsSearch);
-//                 TODO: LLAMAR A LOS OTROS BEHAVIOURS...
+            }else{
+                agent.log(msg.getSender().getLocalName()+"Request new position");
                 reply.setPerformative(ACLMessage.AGREE);
             }
-        } catch (Exception e) {
+        } catch (UnreadableException | IOException e) {
             reply.setPerformative(ACLMessage.FAILURE);
             agent.errorLog(e.getMessage());
-            e.printStackTrace();
         }
         agent.log("Response being prepared");
         return reply;
@@ -124,14 +133,21 @@ public class StepsResponseBehaviour extends AchieveREResponder {
         reply.setPerformative(ACLMessage.INFORM);
 
         try {
-            agent.log("aun no");
+            if(msg.getSender().equals(agent.getCoordinatorAgent())){
+                agent.log("aun no");
 //            reply.setContentObject(agent.getGame());
+            }else{
+                StreetCell newPosition = agent.getNewPosition(msg.getSender());
+//                oldPosition.removeAgent(Agent);
+//                newPosition.addAgent(Agent);
+                reply.setContentObject(newPosition);
+            }
         } catch (Exception e) {
             reply.setPerformative(ACLMessage.FAILURE);
             agent.errorLog(e.toString());
             e.printStackTrace();
         }
-        agent.log("Game settings sent");
+        agent.log("Response sent to:"+msg.getSender().getLocalName());
         return reply;
 
     }

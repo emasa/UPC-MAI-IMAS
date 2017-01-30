@@ -8,12 +8,9 @@ package cat.urv.imas.agent;
 import static cat.urv.imas.agent.ImasAgent.OWNER;
 import cat.urv.imas.behaviour.scout.ResponseGarbageBehaviour;
 import cat.urv.imas.map.BuildingCell;
-//import cat.urv.imas.behaviour.scout.RequesterBehaviour;
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.StreetCell;
-import cat.urv.imas.onthology.GameSettings;
 import jade.core.AID;
-import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -21,10 +18,7 @@ import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.lang.acl.UnreadableException;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
@@ -96,8 +90,6 @@ public class ScoutAgent extends ImasAgent{
 
         this.addBehaviour(new ResponseGarbageBehaviour(this, mt));
     }
-    
-    
 
     public ArrayList<Cell> getAdjacentCells() {
         return adjacentCells;
@@ -113,6 +105,14 @@ public class ScoutAgent extends ImasAgent{
 
     public void setGarbageCells(ArrayList<BuildingCell> garbageCells) {
         this.garbageCells = garbageCells;
+    }
+
+    public StreetCell getPosition() {
+        return position;
+    }
+
+    public void setPosition(StreetCell position) {
+        this.position = position;
     }
 
 }

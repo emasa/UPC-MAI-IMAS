@@ -19,17 +19,12 @@ package cat.urv.imas.agent;
 
 import cat.urv.imas.onthology.GameSettings;
 import cat.urv.imas.behaviour.coordinator.RequesterBehaviour;
-import cat.urv.imas.map.Cell;
 import cat.urv.imas.onthology.MessageContent;
 import jade.core.*;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.SequentialBehaviour;
 import jade.domain.*;
 import jade.domain.FIPAAgentManagement.*;
 import jade.domain.FIPANames.InteractionProtocol;
 import jade.lang.acl.*;
-import java.util.HashMap;
-import java.util.List;
 
 /**
  * The main Coordinator agent. 

@@ -17,19 +17,12 @@
  */
 package cat.urv.imas.behaviour.scout;
 
-import cat.urv.imas.behaviour.coordinator.*;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
-import cat.urv.imas.agent.CoordinatorAgent;
 import cat.urv.imas.agent.ScoutAgent;
-import cat.urv.imas.agent.ScoutCoordinatorAgent;
-import cat.urv.imas.map.Cell;
+import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.GameSettings;
-import jade.lang.acl.UnreadableException;
-import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Behaviour for the Coordinator agent to deal with AGREE messages.
@@ -40,18 +33,12 @@ import java.util.logging.Logger;
  * NOTE: The game is processed by another behaviour that we add after the 
  * INFORM has been processed.
  */
-public class RequesterBehaviour extends AchieveREInitiator {
+public class RequestMovementBehaviour extends AchieveREInitiator {
 
-    public RequesterBehaviour(ScoutAgent agent) {
-        super(agent, agent.receive());
-        try{
-            ACLMessage msg = agent.receive();
-            agent.log("Started behaviour to deal with AGREEs");
-            ArrayList<Cell> adjacentCells = (ArrayList<Cell>) msg.getContentObject();
-            System.out.println( " - " + agent.getLocalName() + " <- " + adjacentCells.size() );
-        } catch (UnreadableException | NullPointerException ex) {
-            Logger.getLogger(ScoutCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
-        }
+    public RequestMovementBehaviour(ScoutAgent agent, ACLMessage requestMsg) {
+        super(agent, requestMsg);
+        AID elem = (AID)requestMsg.getAllReceiver().next();
+        agent.log("Adjacent cells sent to Scout "+ elem.getLocalName()+".");
     }
 
     /**
@@ -61,7 +48,7 @@ public class RequesterBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleAgree(ACLMessage msg) {
-        CoordinatorAgent agent = (CoordinatorAgent) this.getAgent();
+        ScoutAgent agent = (ScoutAgent) this.getAgent();
         agent.log("AGREE received from " + ((AID) msg.getSender()).getLocalName());
     }
 
@@ -72,12 +59,13 @@ public class RequesterBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleInform(ACLMessage msg) {
-        CoordinatorAgent agent = (CoordinatorAgent) this.getAgent();
+        ScoutAgent agent = (ScoutAgent) this.getAgent();
         agent.log("INFORM received from " + ((AID) msg.getSender()).getLocalName());
         try {
-            GameSettings game = (GameSettings) msg.getContentObject();
-            agent.setGame(game);
-            agent.log(game.getShortString());
+            StreetCell newPosition = (StreetCell) msg.getContentObject();
+            if(newPosition != null)
+                agent.setPosition(newPosition);
+            agent.log("my new Cell: "+agent.getPosition());
         } catch (Exception e) {
             agent.errorLog("Incorrect content: " + e.toString());
         }
@@ -90,7 +78,7 @@ public class RequesterBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleNotUnderstood(ACLMessage msg) {
-        CoordinatorAgent agent = (CoordinatorAgent) this.getAgent();
+        ScoutAgent agent = (ScoutAgent) this.getAgent();
         agent.log("This message NOT UNDERSTOOD.");
     }
 
@@ -101,7 +89,7 @@ public class RequesterBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleFailure(ACLMessage msg) {
-        CoordinatorAgent agent = (CoordinatorAgent) this.getAgent();
+        ScoutAgent agent = (ScoutAgent) this.getAgent();
         agent.log("The action has failed.");
 
     } //End of handleFailure
@@ -113,7 +101,7 @@ public class RequesterBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleRefuse(ACLMessage msg) {
-        CoordinatorAgent agent = (CoordinatorAgent) this.getAgent();
+        ScoutAgent agent = (ScoutAgent) this.getAgent();
         agent.log("Action refused.");
     }
 

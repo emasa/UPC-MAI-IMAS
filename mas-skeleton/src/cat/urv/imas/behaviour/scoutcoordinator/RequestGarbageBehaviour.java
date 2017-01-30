@@ -17,21 +17,10 @@
  */
 package cat.urv.imas.behaviour.scoutcoordinator;
 
-import cat.urv.imas.agent.AgentType;
 import cat.urv.imas.agent.ScoutCoordinatorAgent;
-import cat.urv.imas.behaviour.coordinator.*;
-import cat.urv.imas.map.Cell;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
-import cat.urv.imas.onthology.GameSettings;
-import cat.urv.imas.onthology.MessageContent;
-import jade.lang.acl.UnreadableException;
-import java.util.HashMap;
-import java.util.Iterator;
-import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  * Behaviour for the Scout Coordinator agent to deal with AGREE messages.
@@ -48,14 +37,6 @@ public class RequestGarbageBehaviour extends AchieveREInitiator {
         super(agent, requestMsg);
         AID elem = (AID)requestMsg.getAllReceiver().next();
         agent.log("Adjacent cells sent to Scout "+ elem.getLocalName()+".");
-//        agent.log(getCurrent().getBehaviourName());
-//        agent.send(requestMsg);
-//        try {
-//            HashMap<String,List<Cell>> content = (HashMap<String,List<Cell>>)requestMsg.getContentObject();
-//            agent.log("Started behaviour to deal with AGREEs: " + content.keySet().iterator().next());
-//        } catch (UnreadableException ex) {
-//            Logger.getLogger(RequestGarbageBehaviour.class.getName()).log(Level.SEVERE, null, ex);
-//        }
     }
 
     /**
@@ -77,7 +58,6 @@ public class RequestGarbageBehaviour extends AchieveREInitiator {
     @Override
     protected void handleInform(ACLMessage msg) {
         ScoutCoordinatorAgent agent = (ScoutCoordinatorAgent) this.getAgent();
-//        agent.log("INFORM received from " + ((AID) msg.getSender()).getLocalName());
         try {
             agent.log("INFORM received from " + ((AID) msg.getSender()).getLocalName());
             // recieve garbage cells
