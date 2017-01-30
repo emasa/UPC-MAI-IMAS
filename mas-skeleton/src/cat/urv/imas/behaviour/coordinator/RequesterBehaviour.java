@@ -81,7 +81,6 @@ public class RequesterBehaviour extends AchieveREInitiator {
                 stepsRequest.setContentObject(content);
                 agent.addBehaviour(new RequesterBehaviour(agent, stepsRequest));
             }else if(senderID.equals(agent.getScoutCoordinatorAgent())){
-//                agent.log("venimos del scout, supuestamente acabo el paso.");
                 ArrayList<BuildingCell> garbageBuildings = (ArrayList<BuildingCell>) msg.getContentObject();
                 agent.addGarbageFound(garbageBuildings);
                 agent.log("total garbage to comunicate to Harvesters: "+garbageBuildings);

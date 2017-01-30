@@ -63,11 +63,11 @@ public class CoordinatorAgent extends ImasAgent {
      */
     private AID harvesterCoordinatorAgent;
     
-    ArrayList<BuildingCell> garbageFound;
+    ArrayList<BuildingCell> garbageFound = new ArrayList<>();
     
-    ArrayList<BuildingCell> garbageCollected;
+    ArrayList<BuildingCell> garbageCollected = new ArrayList<>();
     
-    ArrayList<BuildingCell> garbageCollecting;
+    ArrayList<BuildingCell> garbageCollecting = new ArrayList<>();
 
     /**
      * Builds the coordinator agent.
