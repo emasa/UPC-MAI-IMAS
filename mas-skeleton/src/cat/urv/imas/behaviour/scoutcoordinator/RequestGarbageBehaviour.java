@@ -18,9 +18,11 @@
 package cat.urv.imas.behaviour.scoutcoordinator;
 
 import cat.urv.imas.agent.ScoutCoordinatorAgent;
+import cat.urv.imas.map.BuildingCell;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
+import java.util.ArrayList;
 
 /**
  * Behaviour for the Scout Coordinator agent to deal with AGREE messages.
@@ -61,9 +63,9 @@ public class RequestGarbageBehaviour extends AchieveREInitiator {
         try {
             agent.log("INFORM received from " + ((AID) msg.getSender()).getLocalName());
             // recieve garbage cells
-//            GameSettings game = (GameSettings) msg.getContentObject();
-//            agent.setGame(game);
-//            agent.log(game.getShortString());
+            ArrayList<BuildingCell> garbageBuildings = (ArrayList<BuildingCell>) msg.getContentObject();
+            agent.addGarbageBuildings(garbageBuildings);
+            agent.log("total garbage: "+agent.getGarbageBuildings());
         } catch (Exception e) {
             agent.errorLog("Incorrect content: " + e.toString());
         }

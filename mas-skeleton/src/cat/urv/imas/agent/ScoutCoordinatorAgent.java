@@ -7,6 +7,7 @@ package cat.urv.imas.agent;
 
 import static cat.urv.imas.agent.ImasAgent.OWNER;
 import cat.urv.imas.behaviour.scoutcoordinator.StepsResponseBehaviour;
+import cat.urv.imas.map.BuildingCell;
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.GameSettings;
@@ -39,6 +40,8 @@ public class ScoutCoordinatorAgent extends ImasAgent{
     private HashMap<AID,ArrayList<Cell>> scoutAdjacentCells = new HashMap<>();
     
     private ArrayList<StreetCell> checkedCells = new ArrayList<>();
+    
+    private ArrayList<BuildingCell> garbageBuildings = new ArrayList<>();
     
      /**
      * Builds the scout coordinator agent.
@@ -144,6 +147,18 @@ public class ScoutCoordinatorAgent extends ImasAgent{
     
     public void addScoutAdjacentCells(AID Scout,ArrayList<Cell> adjacentCells) {
         this.scoutAdjacentCells.put(Scout, adjacentCells);
+    }
+
+    public ArrayList<BuildingCell> getGarbageBuildings() {
+        return garbageBuildings;
+    }
+
+    public void setGarbageBuildings(ArrayList<BuildingCell> garbageBuildings) {
+        this.garbageBuildings = garbageBuildings;
+    }
+    
+    public void addGarbageBuildings(ArrayList<BuildingCell> garbageBuildings) {
+        this.garbageBuildings.addAll(garbageBuildings);
     }
 
 }

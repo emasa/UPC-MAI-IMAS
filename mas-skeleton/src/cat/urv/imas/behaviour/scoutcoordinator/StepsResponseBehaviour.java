@@ -134,8 +134,8 @@ public class StepsResponseBehaviour extends AchieveREResponder {
 
         try {
             if(msg.getSender().equals(agent.getCoordinatorAgent())){
-                agent.log("aun no");
-//            reply.setContentObject(agent.getGame());
+                reply.setContentObject(agent.getGarbageBuildings());
+                agent.log("reply with found garbage, and the scouts end their turns.");
             }else{
                 StreetCell newPosition = agent.getNewPosition(msg.getSender());
 //                oldPosition.removeAgent(Agent);

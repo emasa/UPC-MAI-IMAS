@@ -21,10 +21,11 @@ import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import cat.urv.imas.agent.CoordinatorAgent;
-import cat.urv.imas.agent.ScoutAgent;
+import cat.urv.imas.map.BuildingCell;
 import cat.urv.imas.onthology.GameSettings;
 import cat.urv.imas.onthology.MessageContent;
 import jade.domain.FIPANames;
+import java.util.ArrayList;
 import java.util.HashMap;
 
 /**
@@ -80,7 +81,10 @@ public class RequesterBehaviour extends AchieveREInitiator {
                 stepsRequest.setContentObject(content);
                 agent.addBehaviour(new RequesterBehaviour(agent, stepsRequest));
             }else if(senderID.equals(agent.getScoutCoordinatorAgent())){
-                agent.log("venimos del scout, supuestamente acabo el paso.");
+//                agent.log("venimos del scout, supuestamente acabo el paso.");
+                ArrayList<BuildingCell> garbageBuildings = (ArrayList<BuildingCell>) msg.getContentObject();
+                // TODO: Maybe store this info.
+                agent.log("total garbage to comunicate to Harvesters: "+garbageBuildings);
             }
         } catch (Exception e) {
             agent.errorLog("Incorrect content: " + e.toString());
