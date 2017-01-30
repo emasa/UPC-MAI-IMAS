@@ -26,7 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 /**
  *
- * @author Daniel
+ * @author Daniel, Dario, Pablo, Angel y Emanuel
  */
 public class HarvesterCoordinatorAgent extends ImasAgent{
      /**
@@ -68,12 +68,13 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
             MessageTemplate.MatchPerformative(ACLMessage.CFP) );
   		
 	addBehaviour(new ContractNetResponder(this, template) {
+            @Override
             protected ACLMessage prepareResponse(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
                 SettableBuildingCell proposal = null;
                 try {
                     // Call evaluateAction to convert cfp to SettableBuildingCell
                     proposal = evaluateAction(cfp);
-                    System.out.println("2. "+getLocalName()+": CFP Received from "+cfp.getSender().getName()+". Action is to collect: "+proposal.getMapMessage());
+                    System.out.println("2. "+getLocalName()+": contract "+cfp.getConversationId()+" received from "+cfp.getSender().getName());
                 } catch (UnreadableException ex) {
                     Logger.getLogger(HarvesterCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
                     System.out.println("2. "+getLocalName()+": Refuse");
@@ -91,23 +92,24 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
                 return propose;              
             }
 			
+            @Override
             protected ACLMessage prepareResultNotification(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
-                System.out.println("5. "+getLocalName()+": Proposal: "+accept.getContent()+" accepted");
+                System.out.println("5. "+getLocalName()+": proposal for contract "+accept.getConversationId()+" was accepted");
 		if (performAction()) {
-                    System.out.println("7. "+getLocalName()+": Action successfully performed");
+                    System.out.println("7. "+getLocalName()+": Action successfully performed on "+accept.getConversationId());
                     ACLMessage inform = accept.createReply();
                     inform.setPerformative(ACLMessage.INFORM);
                     inform.setContent(accept.getContent());
                     return inform;
 		}
 		else {
-                    System.out.println("7. "+getLocalName()+": Action execution failed");
+                    System.out.println("7. "+getLocalName()+": action execution failed on "+accept.getConversationId());
                     throw new FailureException("unexpected-error");
 		}	
             }
 			
             protected void handleRejectProposal(ACLMessage reject) {
-                System.out.println("5. "+getLocalName()+": Proposal:"+reject.getContent()+" rejected");
+                System.out.println("5. "+getLocalName()+": Proposal:"+reject.getConversationId()+" rejected");
             }
         } );
     }
@@ -120,10 +122,10 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
     }
   
     private boolean performAction() { 
-        System.out.println("6. "+getLocalName()+" formed a coalition");
+        System.out.println("6. "+getLocalName()+": formed a coalition");
         
   	// Call coalition to collect garbage
-        // MessageWrapper messageCoalition = new MessageWrapper.setObject();
+//        MessageWrapper messageCoalition = new MessageWrapper.setObject();
         // coalition(cellBuilding)
   	return true;
     }
