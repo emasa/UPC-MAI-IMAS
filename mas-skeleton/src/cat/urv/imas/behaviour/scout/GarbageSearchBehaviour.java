@@ -34,7 +34,7 @@ public class GarbageSearchBehaviour extends OneShotBehaviour {
         //      Use: BuildingCell.detectGarbage() to do so.        
         ArrayList<Cell> buildingsWithGarbage = new ArrayList<>();
 
-        for (Cell cell : scout.getSurroundingCells()) {
+        for (Cell cell : scout.getAdjacentCells()) {
             // filter surrounding cells containing a building
             if (cell.getCellType() == CellType.BUILDING) {
                 BuildingCell building = (BuildingCell) cell;
@@ -80,7 +80,7 @@ public class GarbageSearchBehaviour extends OneShotBehaviour {
         // direction is null if invalid movement
         StreetCell[] directions = new StreetCell[] {null, null, null, null};
         StreetCell currentPos = scout.getCurrentPosition();        
-        for (Cell cell : scout.getSurroundingCells()) {
+        for (Cell cell : scout.getAdjacentCells()) {
             // filter surrounding cells containing a street
             if (cell.getCellType() == CellType.STREET) {
                 StreetCell nextPos = (StreetCell) cell;                
