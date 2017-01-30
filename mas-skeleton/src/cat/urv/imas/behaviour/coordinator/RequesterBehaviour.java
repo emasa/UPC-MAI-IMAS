@@ -83,7 +83,7 @@ public class RequesterBehaviour extends AchieveREInitiator {
             }else if(senderID.equals(agent.getScoutCoordinatorAgent())){
 //                agent.log("venimos del scout, supuestamente acabo el paso.");
                 ArrayList<BuildingCell> garbageBuildings = (ArrayList<BuildingCell>) msg.getContentObject();
-                // TODO: Maybe store this info.
+                agent.addGarbageFound(garbageBuildings);
                 agent.log("total garbage to comunicate to Harvesters: "+garbageBuildings);
             }
         } catch (Exception e) {

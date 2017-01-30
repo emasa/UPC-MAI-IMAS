@@ -26,7 +26,7 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 /**
  *
- * @author Daniel
+ * @author Daniel, Dario, Pablo, Angel y Emanuel
  */
 public class HarvesterCoordinatorAgent extends ImasAgent{
      /**
@@ -68,6 +68,7 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
             MessageTemplate.MatchPerformative(ACLMessage.CFP) );
   		
 	addBehaviour(new ContractNetResponder(this, template) {
+            @Override
             protected ACLMessage prepareResponse(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
                 SettableBuildingCell proposal = null;
                 try {
@@ -91,6 +92,7 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
                 return propose;              
             }
 			
+            @Override
             protected ACLMessage prepareResultNotification(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
                 System.out.println("5. "+getLocalName()+": Proposal: "+accept.getConversationId()+" accepted");
 		if (performAction()) {
