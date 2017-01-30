@@ -6,35 +6,56 @@
 package cat.urv.imas.agent;
 
 import static cat.urv.imas.agent.ImasAgent.OWNER;
+import cat.urv.imas.behaviour.scout.ResponseGarbageBehaviour;
+import cat.urv.imas.map.BuildingCell;
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.StreetCell;
-import cat.urv.imas.onthology.GameSettings;
-import jade.core.behaviours.CyclicBehaviour;
+import jade.core.AID;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
+import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
-import jade.lang.acl.UnreadableException;
+import jade.lang.acl.MessageTemplate;
 import java.util.ArrayList;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 
 /**
  *
  * @author Dario, Angel, Pablo, Emanuel y Daniel
  */
 public class ScoutAgent extends ImasAgent{
+    
+    private StreetCell position;
+    /**
+     * The Coordinator agent with which interacts sharing game settings every
+     * round.
+     */
+    private AID scoutCoordinatorAgent;
+    /**
+     * The Coordinator agent with which interacts sharing game settings every
+     * round.
+     */
+    private ArrayList<Cell> adjacentCells;
+    /**
+     * The Coordinator agent with which interacts sharing game settings every
+     * round.
+     */
+    private ArrayList<BuildingCell> garbageCells;
+    
      /**
      * Builds the coordinator agent.
      */
     public ScoutAgent() {
         super(AgentType.SCOUT);
     }
-    private StreetCell position;
-    
+
     @Override
     protected void setup() {
+        /* ** Very Important Line (VIL) ***************************************/
+        this.setEnabledO2ACommunication(true, 1);
+        /* ********************************************************************/
+        
          // Register the agent to the DF
         ServiceDescription sd1 = new ServiceDescription();
         sd1.setType(AgentType.SCOUT.toString());
@@ -61,22 +82,37 @@ public class ScoutAgent extends ImasAgent{
         } else {
             // Make the agent terminate immediately
             doDelete();
-        }
         
-        this.addBehaviour(new CyclicBehaviour(this) {
-            public void action() {
-                ACLMessage msg= receive();
-                if (msg!=null){
-                    try {
-                        ArrayList<Cell> adjacentCells = (ArrayList<Cell>) msg.getContentObject();
-                        System.out.println( " - " + myAgent.getLocalName() + " <- " + adjacentCells.size() );
-                    } catch (UnreadableException ex) {
-                        Logger.getLogger(ScoutCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-                block();
-            }
-        });
+        }
+        // add behaviours
+        // we wait for the initialization of the game
+        MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+
+        this.addBehaviour(new ResponseGarbageBehaviour(this, mt));
+    }
+
+    public ArrayList<Cell> getAdjacentCells() {
+        return adjacentCells;
+    }
+
+    public void setAdjacentCells(ArrayList<Cell> adjacentCells) {
+        this.adjacentCells = adjacentCells;
+    }
+
+    public ArrayList<BuildingCell> getGarbageCells() {
+        return garbageCells;
+    }
+
+    public void setGarbageCells(ArrayList<BuildingCell> garbageCells) {
+        this.garbageCells = garbageCells;
+    }
+
+    public StreetCell getPosition() {
+        return position;
+    }
+
+    public void setPosition(StreetCell position) {
+        this.position = position;
     }
 
 }

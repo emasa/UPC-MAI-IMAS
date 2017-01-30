@@ -21,8 +21,6 @@ import cat.urv.imas.onthology.GameSettings;
 import cat.urv.imas.behaviour.coordinator.RequesterBehaviour;
 import cat.urv.imas.onthology.MessageContent;
 import jade.core.*;
-import jade.core.behaviours.CyclicBehaviour;
-import jade.core.behaviours.SequentialBehaviour;
 import jade.domain.*;
 import jade.domain.FIPAAgentManagement.*;
 import jade.domain.FIPANames.InteractionProtocol;
@@ -82,14 +80,6 @@ public class CoordinatorAgent extends ImasAgent {
             System.err.println(getLocalName() + " registration with DF unsucceeded. Reason: " + e.getMessage());
             doDelete();
         }
-        
-        SequentialBehaviour initialBehaviour = new SequentialBehaviour(this){
-            public int onEnd() {
-                reset();
-                myAgent.addBehaviour(this);
-                return super.onEnd();
-            }
-        };
        
         // search SystemAgent
         ServiceDescription searchCriterion = new ServiceDescription();
@@ -101,43 +91,19 @@ public class CoordinatorAgent extends ImasAgent {
         // searchAgent is a blocking method, so we will obtain always a correct AID
 
         /* ********************************************************************/
-        ACLMessage initialRequest = new ACLMessage(ACLMessage.REQUEST);
-        initialRequest.clearAllReceiver();
-        initialRequest.addReceiver(this.systemAgent);
-        initialRequest.setProtocol(InteractionProtocol.FIPA_REQUEST);
+        ACLMessage gameRequest = new ACLMessage(ACLMessage.REQUEST);
+        gameRequest.clearAllReceiver();
+        gameRequest.addReceiver(this.systemAgent);
+        gameRequest.setProtocol(InteractionProtocol.FIPA_REQUEST);
         log("Request message to agent");
         try {
-            initialRequest.setContent(MessageContent.GET_MAP);
-            log("Request message content:" + initialRequest.getContent());
+            gameRequest.setContent(MessageContent.GET_MAP);
+            log("Request message content:" + gameRequest.getContent());
         } catch (Exception e) {
             e.printStackTrace();
         }
         
-        initialBehaviour.addSubBehaviour(new RequesterBehaviour(this, initialRequest));
-        initialBehaviour.addSubBehaviour(new CyclicBehaviour(this) 
-            {
-                public void action() {
-                    CoordinatorAgent currentAgent = (CoordinatorAgent) myAgent;
-                    ACLMessage forward = new ACLMessage(ACLMessage.INFORM);
-                    forward.addReceiver(currentAgent.scoutCoordinatorAgent);
-                    try {
-                        forward.setContentObject(currentAgent.getGame());
-                        currentAgent.send(forward);
-                    } catch (Exception e) {
-                        forward.setPerformative(ACLMessage.FAILURE);
-                        currentAgent.errorLog(e.toString());
-                        e.printStackTrace();
-                    }
-                    currentAgent.log("Game settings sent to Scout Coordinator.");
-                    block();
-                }
-            });
-
-        //we add a behaviour that sends the message and waits for an answer
-        this.addBehaviour(initialBehaviour);
-
-        // setup finished. When we receive the last inform, the agent itself will add
-        // a behaviour to send/receive actions
+        this.addBehaviour(new RequesterBehaviour(this, gameRequest));
     }
 
     /**
@@ -156,6 +122,22 @@ public class CoordinatorAgent extends ImasAgent {
      */
     public GameSettings getGame() {
         return this.game;
+    }
+
+    public AID getScoutCoordinatorAgent() {
+        return scoutCoordinatorAgent;
+    }
+
+    public void setScoutCoordinatorAgent(AID scoutCoordinatorAgent) {
+        this.scoutCoordinatorAgent = scoutCoordinatorAgent;
+    }
+
+    public AID getSystemAgent() {
+        return systemAgent;
+    }
+
+    public void setSystemAgent(AID systemAgent) {
+        this.systemAgent = systemAgent;
     }
 
 }

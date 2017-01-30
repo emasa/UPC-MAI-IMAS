@@ -15,18 +15,14 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package cat.urv.imas.behaviour.coordinator;
+package cat.urv.imas.behaviour.scout;
 
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
-import cat.urv.imas.agent.CoordinatorAgent;
-import cat.urv.imas.map.BuildingCell;
+import cat.urv.imas.agent.ScoutAgent;
+import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.GameSettings;
-import cat.urv.imas.onthology.MessageContent;
-import jade.domain.FIPANames;
-import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Behaviour for the Coordinator agent to deal with AGREE messages.
@@ -37,11 +33,12 @@ import java.util.HashMap;
  * NOTE: The game is processed by another behaviour that we add after the 
  * INFORM has been processed.
  */
-public class RequesterBehaviour extends AchieveREInitiator {
+public class RequestMovementBehaviour extends AchieveREInitiator {
 
-    public RequesterBehaviour(CoordinatorAgent agent, ACLMessage requestMsg) {
+    public RequestMovementBehaviour(ScoutAgent agent, ACLMessage requestMsg) {
         super(agent, requestMsg);
-        agent.log("Started behaviour to deal with AGREEs");
+        AID elem = (AID)requestMsg.getAllReceiver().next();
+        agent.log("Adjacent cells sent to Scout "+ elem.getLocalName()+".");
     }
 
     /**
@@ -51,7 +48,7 @@ public class RequesterBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleAgree(ACLMessage msg) {
-        CoordinatorAgent agent = (CoordinatorAgent) this.getAgent();
+        ScoutAgent agent = (ScoutAgent) this.getAgent();
         agent.log("AGREE received from " + ((AID) msg.getSender()).getLocalName());
     }
 
@@ -62,30 +59,13 @@ public class RequesterBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleInform(ACLMessage msg) {
-        CoordinatorAgent agent = (CoordinatorAgent) this.getAgent();
-        AID senderID = (AID) msg.getSender();
-        agent.log("INFORM received from " + senderID.getLocalName());
+        ScoutAgent agent = (ScoutAgent) this.getAgent();
+        agent.log("INFORM received from " + ((AID) msg.getSender()).getLocalName());
         try {
-            if(senderID.equals(agent.getSystemAgent())){
-                GameSettings game = (GameSettings) msg.getContentObject();
-                agent.setGame(game);
-                agent.log(game.getShortString());
-                /* ********************************************************************/
-                ACLMessage stepsRequest = new ACLMessage(ACLMessage.REQUEST);
-                stepsRequest.clearAllReceiver();
-                stepsRequest.addReceiver(agent.getScoutCoordinatorAgent());
-                stepsRequest.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-                agent.log("Request message to Scout Coordinator.");
-                HashMap<String,GameSettings> content = new HashMap<String, GameSettings>();
-                content.put(MessageContent.GET_SCOUT_STEPS, agent.getGame());
-                stepsRequest.setContentObject(content);
-                agent.addBehaviour(new RequesterBehaviour(agent, stepsRequest));
-            }else if(senderID.equals(agent.getScoutCoordinatorAgent())){
-//                agent.log("venimos del scout, supuestamente acabo el paso.");
-                ArrayList<BuildingCell> garbageBuildings = (ArrayList<BuildingCell>) msg.getContentObject();
-                // TODO: Maybe store this info.
-                agent.log("total garbage to comunicate to Harvesters: "+garbageBuildings);
-            }
+            StreetCell newPosition = (StreetCell) msg.getContentObject();
+            if(newPosition != null)
+                agent.setPosition(newPosition);
+            agent.log("my new Cell: "+agent.getPosition());
         } catch (Exception e) {
             agent.errorLog("Incorrect content: " + e.toString());
         }
@@ -98,7 +78,7 @@ public class RequesterBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleNotUnderstood(ACLMessage msg) {
-        CoordinatorAgent agent = (CoordinatorAgent) this.getAgent();
+        ScoutAgent agent = (ScoutAgent) this.getAgent();
         agent.log("This message NOT UNDERSTOOD.");
     }
 
@@ -109,7 +89,7 @@ public class RequesterBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleFailure(ACLMessage msg) {
-        CoordinatorAgent agent = (CoordinatorAgent) this.getAgent();
+        ScoutAgent agent = (ScoutAgent) this.getAgent();
         agent.log("The action has failed.");
 
     } //End of handleFailure
@@ -121,7 +101,7 @@ public class RequesterBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleRefuse(ACLMessage msg) {
-        CoordinatorAgent agent = (CoordinatorAgent) this.getAgent();
+        ScoutAgent agent = (ScoutAgent) this.getAgent();
         agent.log("Action refused.");
     }
 
