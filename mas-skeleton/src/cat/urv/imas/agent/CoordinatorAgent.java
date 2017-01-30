@@ -144,7 +144,7 @@ public class CoordinatorAgent extends ImasAgent {
         contract.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
         // We want to receive a reply in 10 secs
         contract.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
-//        contract.setContent(content);                             
+        contract.setConversationId("C-Dummy");
         
         try {
             contract.setContentObject(celda);
@@ -153,18 +153,18 @@ public class CoordinatorAgent extends ImasAgent {
         }
         log("ContractNet Started");
         String content = celda.getMapMessage()+" in R"+celda.getRow()+" C"+celda.getCol();        
-        System.out.println("1. Coordinator Agent sent a ContractNet to collect "+content);
+        System.out.println("1. "+getLocalName()+": sent contract "+contract.getConversationId());
         
         this.addBehaviour(new ContractNetInitiator(this, contract) {			
             @Override
             protected void handlePropose(ACLMessage propose, Vector v) {
                 // Receive Proposal
-                System.out.println("3. Agent "+propose.getSender().getName()+" Proposed to collect: "+propose.getContent());             
+                System.out.println("3. "+propose.getSender().getName()+": made a proposal for contract "+propose.getConversationId());
             }
 
             @Override
             protected void handleRefuse(ACLMessage refuse) {
-                System.out.println("3. Agent "+refuse.getSender().getName()+" refused");
+                System.out.println("3. "+refuse.getSender().getName()+": refused "+refuse.getConversationId());
             }
 
             @Override
@@ -175,7 +175,7 @@ public class CoordinatorAgent extends ImasAgent {
                     System.out.println("Responder does not exist");
                 }
                 else {
-                    System.out.println("Agent "+failure.getSender().getName()+" failed");
+                    System.out.println("Agent "+failure.getSender().getName()+" failed "+failure.getConversationId());
                 }
             }
 
@@ -189,13 +189,13 @@ public class CoordinatorAgent extends ImasAgent {
                     accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
                     acceptances.addElement(accept);
                     accept.setContent(proposal.getContent()); 
-                    System.out.println("4. "+getLocalName()+" Accepted proposal: "+proposal.getContent());
+                    System.out.println("4. "+getLocalName()+": accepted proposal for "+proposal.getConversationId());
                 }             
             }
                         
             @Override
             protected void handleInform(ACLMessage inform) {
-                System.out.println("8. "+inform.getSender().getName()+" successfully performed: "+inform.getContent());
+                System.out.println("8. "+inform.getSender().getName()+": successfully performed "+inform.getConversationId());
             }
         });
         

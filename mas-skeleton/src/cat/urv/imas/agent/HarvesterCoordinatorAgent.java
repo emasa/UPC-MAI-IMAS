@@ -74,7 +74,7 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
                 try {
                     // Call evaluateAction to convert cfp to SettableBuildingCell
                     proposal = evaluateAction(cfp);
-                    System.out.println("2. "+getLocalName()+": CFP Received from "+cfp.getSender().getName()+". Action is to collect: "+proposal.getMapMessage());
+                    System.out.println("2. "+getLocalName()+": received contract "+cfp.getConversationId());
                 } catch (UnreadableException ex) {
                     Logger.getLogger(HarvesterCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
                     System.out.println("2. "+getLocalName()+": Refuse");
@@ -94,9 +94,9 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
 			
             @Override
             protected ACLMessage prepareResultNotification(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
-                System.out.println("5. "+getLocalName()+": Proposal: "+accept.getContent()+" accepted");
+                System.out.println("5. "+getLocalName()+": proposal for contract "+accept.getConversationId()+" was accepted");
 		if (performAction()) {
-                    System.out.println("7. "+getLocalName()+": Action successfully performed");
+                    System.out.println("7. "+getLocalName()+": action successfully performed in "+accept.getConversationId());
                     ACLMessage inform = accept.createReply();
                     inform.setPerformative(ACLMessage.INFORM);
                     inform.setContent(accept.getContent());
