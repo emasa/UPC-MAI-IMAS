@@ -7,6 +7,7 @@ package cat.urv.imas.agent;
 
 import static cat.urv.imas.agent.ImasAgent.OWNER;
 import cat.urv.imas.behaviour.scout.ResponseGarbageBehaviour;
+import cat.urv.imas.map.BuildingCell;
 //import cat.urv.imas.behaviour.scout.RequesterBehaviour;
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.StreetCell;
@@ -37,6 +38,16 @@ public class ScoutAgent extends ImasAgent{
      * round.
      */
     private AID scoutCoordinatorAgent;
+    /**
+     * The Coordinator agent with which interacts sharing game settings every
+     * round.
+     */
+    private ArrayList<Cell> adjacentCells;
+    /**
+     * The Coordinator agent with which interacts sharing game settings every
+     * round.
+     */
+    private ArrayList<BuildingCell> garbageCells;
     
      /**
      * Builds the coordinator agent.
@@ -79,54 +90,29 @@ public class ScoutAgent extends ImasAgent{
             doDelete();
         
         }
-        
-        // search CoordinatorAgent
-//        ServiceDescription searchCriterion = new ServiceDescription();
-//        searchCriterion.setType(AgentType.SCOUT_COORDINATOR.toString());
-//        this.scoutCoordinatorAgent = UtilsAgents.searchAgent(this, searchCriterion);
-//        // searchAgent is a blocking method, so we will obtain always a correct AID
-
         // add behaviours
         // we wait for the initialization of the game
         MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
 
         this.addBehaviour(new ResponseGarbageBehaviour(this, mt));
-        
-//        this.addBehaviour(new RequesterBehaviour(this));
-        
-//        try{
-//            ACLMessage msg = receive();
-//            ArrayList<Cell> adjacentCells = (ArrayList<Cell>) msg.getContentObject();
-//            System.out.println( " - " + getLocalName() + " <- " + adjacentCells.size() );
-//        } catch (UnreadableException ex) {
-//            Logger.getLogger(ScoutCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
-//        } catch (NullPointerException nex){
-//            Logger.getLogger(ScoutCoordinatorAgent.class.getName()).log(Level.SEVERE, null, nex);
-//        }
-        
-//        if (msg!=null){
-//            try {
-//                
-//            
-//                
-//            }
-//        }
-        
-//        this.addBehaviour(new CyclicBehaviour(this) {
-//            @Override
-//            public void action() {
-//                ACLMessage msg = receive();
-//                if (msg!=null){
-//                    try {
-//                        ArrayList<Cell> adjacentCells = (ArrayList<Cell>) msg.getContentObject();
-//                        System.out.println( " - " + myAgent.getLocalName() + " <- " + adjacentCells.size() );
-//                    } catch (UnreadableException ex) {
-//                        Logger.getLogger(ScoutCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
-//                    }
-//                }
-//                block();
-//            }
-//        });
+    }
+    
+    
+
+    public ArrayList<Cell> getAdjacentCells() {
+        return adjacentCells;
+    }
+
+    public void setAdjacentCells(ArrayList<Cell> adjacentCells) {
+        this.adjacentCells = adjacentCells;
+    }
+
+    public ArrayList<BuildingCell> getGarbageCells() {
+        return garbageCells;
+    }
+
+    public void setGarbageCells(ArrayList<BuildingCell> garbageCells) {
+        this.garbageCells = garbageCells;
     }
 
 }

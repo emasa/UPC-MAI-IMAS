@@ -28,4 +28,16 @@ public class MessageContent {
      */
     public static final String GET_MAP = "Get map";
     
+    /**
+     * Message sent from Scout Coordinator agent to Scout agent to get the
+     * BuildingCells with garbage.
+     */
+    public static final String GET_GARBAGE = "Get garbage";
+    
+    /**
+     * Message sent from Scout Coordinator agent to Scout agent to get the
+     * BuildingCells with garbage.
+     */
+    public static final String GET_SCOUT_STEPS = "Get scout steps";
+    
 }

@@ -7,12 +7,16 @@ package cat.urv.imas.agent;
 
 import static cat.urv.imas.agent.ImasAgent.OWNER;
 import cat.urv.imas.behaviour.scoutcoordinator.RequestGarbageBehaviour;
+import cat.urv.imas.behaviour.scoutcoordinator.StepsResponseBehaviour;
+import cat.urv.imas.behaviour.system.RequestResponseBehaviour;
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.GameSettings;
+import cat.urv.imas.onthology.MessageContent;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.core.behaviours.OneShotBehaviour;
+import jade.core.behaviours.ParallelBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -20,8 +24,10 @@ import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.logging.Level;
@@ -73,52 +79,71 @@ public class ScoutCoordinatorAgent extends ImasAgent{
             doDelete();
         }
         
-        SequentialBehaviour stepBehaviour = new SequentialBehaviour(this){
-            @Override
-            public int onEnd() {
-                reset();
-//                System.out.println(".onEnd() finalizo");
-                myAgent.addBehaviour(this);
-                return super.onEnd();
-            }
-        };
-        
-        stepBehaviour.addSubBehaviour(new OneShotBehaviour(this) {
-            public void action() {
-                ACLMessage msg= receive();
-                if (msg != null){
-                    GameSettings game;
-                    try {
-                        ScoutCoordinatorAgent currentAgent = (ScoutCoordinatorAgent) myAgent;
-                        game = (GameSettings) msg.getContentObject();
-                        currentAgent.setGame(game);
-                        currentAgent.log("Game settings received.");
-                        List<Cell> agentsCells = game.getAgentList().get(AgentType.SCOUT);
-                        for (int i = 0; i < agentsCells.size(); i++) {
-                            StreetCell cell = (StreetCell) agentsCells.get(i);
-                            ACLMessage cellsInform = new ACLMessage(ACLMessage.REQUEST);
-                            cellsInform.clearAllReceiver();
-                            cellsInform.addReceiver(cell.getAgent().getAID());
-                            cellsInform.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-                            try {
-                                cellsInform.setContentObject(game.getAdjacentCells(cell));
-                                SequentialBehaviour stepBehaviour = (SequentialBehaviour)this.getParent();
-                                stepBehaviour.addSubBehaviour(new RequestGarbageBehaviour(currentAgent, cellsInform));
-                            } catch (Exception e) {
-                                cellsInform.setPerformative(ACLMessage.FAILURE);
-                                currentAgent.errorLog(e.toString());
-                                e.printStackTrace();
-                            }
-                        }
-                    } catch (UnreadableException ex) {
-                        Logger.getLogger(ScoutCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
-                    }
-                }
-                block();
-            }
-        });
+        // add behaviours
+        // we wait for the initialization of the game
+        MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
 
-        this.addBehaviour(stepBehaviour);
+        this.addBehaviour(new StepsResponseBehaviour(this, mt));
+        
+//        SequentialBehaviour stepBehaviour = new SequentialBehaviour(this){
+//            @Override
+//            public int onEnd() {
+//                reset();
+//                System.out.println(".onEnd() finalizo");
+//                myAgent.addBehaviour(this);
+//                return super.onEnd();
+//            }
+//        };
+        
+//        stepBehaviour.addSubBehaviour(new OneShotBehaviour(this) {
+//        this.addBehaviour(new OneShotBehaviour(this) {
+//            public void action() {
+//                ACLMessage msg= receive();
+//                if (msg != null){
+//                    GameSettings game;
+//                    try {
+//                        ScoutCoordinatorAgent currentAgent = (ScoutCoordinatorAgent) myAgent;
+//                        game = (GameSettings) msg.getContentObject();
+//                        currentAgent.setGame(game);
+//                        currentAgent.log("Game settings received.");
+//                        List<Cell> agentsCells = game.getAgentList().get(AgentType.SCOUT);
+//                        for (int i = 0; i < agentsCells.size(); i++) {
+//                            StreetCell cell = (StreetCell) agentsCells.get(i);
+//                            ACLMessage cellsInform = new ACLMessage(ACLMessage.REQUEST);
+//                            cellsInform.clearAllReceiver();
+//                            cellsInform.addReceiver(cell.getAgent().getAID());
+//                            cellsInform.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+//                            log("Request message to agent: " + cell.getAgent().getAID().getLocalName());
+//                            try {
+//                                HashMap<String,List<Cell>> content = new HashMap<String, List<Cell>>();
+//                                content.put(MessageContent.GET_GARBAGE, game.getAdjacentCells(cell));
+//                                cellsInform.setContentObject(content);
+////                                ParallelBehaviour scoutsSearch = (ParallelBehaviour)currentAgent.scoutsSearch;
+//                                ParallelBehaviour scoutsSearch = new ParallelBehaviour(currentAgent, ParallelBehaviour.WHEN_ALL);
+////                                ACLMessage weakerMsg = new ACLMessage(ACLMessage.INFORM);
+////                                cellsInform.addReceiver(cell.getAgent().getAID());
+//////                                log("se envia?");
+////                                currentAgent.send(weakerMsg);
+//                                scoutsSearch.addSubBehaviour(new RequestGarbageBehaviour(currentAgent, cellsInform));
+//                                currentAgent.addBehaviour(scoutsSearch);
+////                                log("Request message content:" + cellsInform.getContent());
+//                            } catch (Exception e) {
+//                                cellsInform.setPerformative(ACLMessage.FAILURE);
+//                                currentAgent.errorLog(e.toString());
+//                                e.printStackTrace();
+//                            }
+//                        }
+//                    } catch (UnreadableException ex) {
+//                        Logger.getLogger(ScoutCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
+//                    }
+//                }
+//                block();
+//            }
+//        });
+        
+//        stepBehaviour.addSubBehaviour(scoutsSearch);
+
+//        this.addBehaviour(stepBehaviour);
     }
     
     /**

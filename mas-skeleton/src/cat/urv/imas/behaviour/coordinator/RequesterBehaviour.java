@@ -23,6 +23,9 @@ import jade.proto.AchieveREInitiator;
 import cat.urv.imas.agent.CoordinatorAgent;
 import cat.urv.imas.agent.ScoutAgent;
 import cat.urv.imas.onthology.GameSettings;
+import cat.urv.imas.onthology.MessageContent;
+import jade.domain.FIPANames;
+import java.util.HashMap;
 
 /**
  * Behaviour for the Coordinator agent to deal with AGREE messages.
@@ -59,11 +62,26 @@ public class RequesterBehaviour extends AchieveREInitiator {
     @Override
     protected void handleInform(ACLMessage msg) {
         CoordinatorAgent agent = (CoordinatorAgent) this.getAgent();
-        agent.log("INFORM received from " + ((AID) msg.getSender()).getLocalName());
+        AID senderID = (AID) msg.getSender();
+        agent.log("INFORM received from " + senderID.getLocalName());
         try {
-            GameSettings game = (GameSettings) msg.getContentObject();
-            agent.setGame(game);
-            agent.log(game.getShortString());
+            if(senderID.equals(agent.getSystemAgent())){
+                GameSettings game = (GameSettings) msg.getContentObject();
+                agent.setGame(game);
+                agent.log(game.getShortString());
+                /* ********************************************************************/
+                ACLMessage stepsRequest = new ACLMessage(ACLMessage.REQUEST);
+                stepsRequest.clearAllReceiver();
+                stepsRequest.addReceiver(agent.getScoutCoordinatorAgent());
+                stepsRequest.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+                agent.log("Request message to Scout Coordinator.");
+                HashMap<String,GameSettings> content = new HashMap<String, GameSettings>();
+                content.put(MessageContent.GET_SCOUT_STEPS, agent.getGame());
+                stepsRequest.setContentObject(content);
+                agent.addBehaviour(new RequesterBehaviour(agent, stepsRequest));
+            }else if(senderID.equals(agent.getScoutCoordinatorAgent())){
+                agent.log("venimos del scout, supuestamente acabo el paso.");
+            }
         } catch (Exception e) {
             agent.errorLog("Incorrect content: " + e.toString());
         }
