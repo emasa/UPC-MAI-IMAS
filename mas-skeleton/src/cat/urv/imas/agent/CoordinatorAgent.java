@@ -129,24 +129,17 @@ public class CoordinatorAgent extends ImasAgent {
         } catch (Exception e) {
             e.printStackTrace();
         }
-<<<<<<< HEAD
-
+        
         //we add a behaviour that sends the message and waits for an answer
         this.addBehaviour(new RequesterBehaviour(this, gameRequest));
         // setup finished. When we receive the last inform, the agent itself will add
         // a behaviour to send/receive actions
-=======
->>>>>>> cf55b80745322e7e56a621c661371468a81b565a
         
         /* ********************************************************************/
         // contract net system
         ServiceDescription searchHC = new ServiceDescription();     
         searchHC.setType(AgentType.HARVESTER_COORDINATOR.toString());
-<<<<<<< HEAD
         this.hcAgent = UtilsAgents.searchAgent(this, searchHC);    
-=======
-        this.harvesterCoordinatorAgent = UtilsAgents.searchAgent(this, searchHC);    
->>>>>>> cf55b80745322e7e56a621c661371468a81b565a
         
         // TODO: CHANGE THIS FOR GARBAGE LIST
         ////////////// Dummy SettableBuildingCell 
@@ -156,20 +149,15 @@ public class CoordinatorAgent extends ImasAgent {
         
         // Fill the CFP message
         ACLMessage contract = new ACLMessage(ACLMessage.CFP);
-<<<<<<< HEAD
         contract.addReceiver(this.hcAgent);
         contract.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
         // We want to receive a reply in 10 secs
         contract.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
-        contract.setContent(content);    
         contract.setConversationId("C:dummy");
-=======
         contract.addReceiver(this.harvesterCoordinatorAgent);
         contract.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
         // We want to receive a reply in 10 secs
         contract.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
-//        contract.setContent(content);                             
->>>>>>> cf55b80745322e7e56a621c661371468a81b565a
         
         try {
             contract.setContentObject(celda);
@@ -177,27 +165,19 @@ public class CoordinatorAgent extends ImasAgent {
             Logger.getLogger(CoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
         }
         log("ContractNet Started");
-<<<<<<< HEAD
-        System.out.println("1. Coordinator Agent sent a ContractNet "+contract.getConversationId()+" to collect "+content);
-=======
-        String content = celda.getMapMessage()+" in R"+celda.getRow()+" C"+celda.getCol();        
-        System.out.println("1. Coordinator Agent sent a ContractNet to collect "+content);
->>>>>>> cf55b80745322e7e56a621c661371468a81b565a
+        System.out.println("1. "+getLocalName()+": sent contract "+contract.getConversationId());
         
         this.addBehaviour(new ContractNetInitiator(this, contract) {			
             @Override
             protected void handlePropose(ACLMessage propose, Vector v) {
                 // Receive Proposal
-<<<<<<< HEAD
-                System.out.println("3. Agent "+propose.getSender().getName()+" Proposed a Coalition on "+propose.getConversationId()+" to collect: "+propose.getContent());             
-=======
-                System.out.println("3. Agent "+propose.getSender().getName()+" Proposed to collect: "+propose.getContent());             
->>>>>>> cf55b80745322e7e56a621c661371468a81b565a
+
+                System.out.println("3. "+propose.getSender().getName()+": proposed a coalition on "+propose.getConversationId());
             }
 
             @Override
             protected void handleRefuse(ACLMessage refuse) {
-                System.out.println("3. Agent "+refuse.getSender().getName()+" refused "+refuse.getConversationId());
+                System.out.println("3. "+refuse.getSender().getName()+": refused "+refuse.getConversationId());
             }
 
             @Override
@@ -222,7 +202,7 @@ public class CoordinatorAgent extends ImasAgent {
                     accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
                     acceptances.addElement(accept);
                     accept.setContent(proposal.getContent()); 
-                    System.out.println("4. "+getLocalName()+" Accepted "+proposal.getConversationId()+" proposal: "+proposal.getContent());
+                    System.out.println("4. "+getLocalName()+": accepted proposal "+proposal.getContent()+" for contract "+proposal.getConversationId());
                 }             
             }
                         
@@ -234,11 +214,9 @@ public class CoordinatorAgent extends ImasAgent {
         
         //we add a behaviour that sends the message and waits for an answer
         this.addBehaviour(new RequesterBehaviour(this, gameRequest));
-<<<<<<< HEAD
-=======
+
         // setup finished. When we receive the last inform, the agent itself will add
         // a behaviour to send/receive actions
->>>>>>> cf55b80745322e7e56a621c661371468a81b565a
     }
 
     /**
@@ -275,9 +253,6 @@ public class CoordinatorAgent extends ImasAgent {
         this.systemAgent = systemAgent;
     }
 
-<<<<<<< HEAD
-}
-=======
     public AID getHarvesterCoordinatorAgent() {
         return harvesterCoordinatorAgent;
     }
@@ -323,4 +298,3 @@ public class CoordinatorAgent extends ImasAgent {
     }
     
 }
->>>>>>> cf55b80745322e7e56a621c661371468a81b565a
