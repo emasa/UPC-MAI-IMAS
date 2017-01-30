@@ -68,6 +68,7 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
             MessageTemplate.MatchPerformative(ACLMessage.CFP) );
   		
 	addBehaviour(new ContractNetResponder(this, template) {
+            @Override
             protected ACLMessage prepareResponse(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
                 SettableBuildingCell proposal = null;
                 try {
@@ -91,6 +92,7 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
                 return propose;              
             }
 			
+            @Override
             protected ACLMessage prepareResultNotification(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
                 System.out.println("5. "+getLocalName()+": Proposal: "+accept.getContent()+" accepted");
 		if (performAction()) {
@@ -123,7 +125,7 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         System.out.println("6. "+getLocalName()+" formed a coalition");
         
   	// Call coalition to collect garbage
-        MessageWrapper messageCoalition = new MessageWrapper.setObject();
+//        MessageWrapper messageCoalition = new MessageWrapper.setObject();
         // coalition(cellBuilding)
   	return true;
     }
