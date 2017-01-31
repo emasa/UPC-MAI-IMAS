@@ -23,6 +23,7 @@ import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.CellType;
 import cat.urv.imas.map.StreetCell;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.xml.bind.annotation.XmlElement;
@@ -253,6 +254,29 @@ public class GameSettings implements java.io.Serializable {
 
     public void setAgentList(Map<AgentType, List<Cell>> agentList) {
         this.agentList = agentList;
+    }
+    
+    public void updateAgentList() {
+        Map<AgentType, List<Cell>> newAgentList = new HashMap<>();
+        newAgentList.put(AgentType.HARVESTER, new ArrayList<Cell>());
+        newAgentList.put(AgentType.SCOUT, new ArrayList<Cell>());
+        
+        int rows = map.length, cols = map[0].length;
+        for (int y = 0 ; y < rows ; ++y) {
+            for (int x = 0 ; x < cols ; ++x) {
+                Cell cell = this.get(y, x);
+                if (cell.getCellType() == CellType.STREET)
+                {
+                    StreetCell street = (StreetCell) cell;
+                    if (street.isThereAnAgent()) {
+                        newAgentList.get(street.getAgent().getType()).add(cell);
+                        System.out.println("Update: " + cell);
+                    }
+                }
+            }
+        }
+        
+        setAgentList(newAgentList);
     }
     
     @Override

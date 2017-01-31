@@ -28,6 +28,7 @@ import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREResponder;;
 import cat.urv.imas.onthology.MessageContent;
 import jade.lang.acl.UnreadableException;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -66,9 +67,6 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
                 scout.setAdjacentCells(adjacentCells);
                 scout.log( " - " + myAgent.getLocalName() + " <- " + adjacentCells.size() );
 
-                // TODO: perform seach of garbage in BuildingCell
-                // TODO: request movement                
-
                 // perform search of garbage and movement
                 this.execute(scout);
                 
@@ -81,8 +79,9 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
 //                agent.addBehaviour(new RequestMovementBehaviour(agent, newCell));
 
                 reply.setPerformative(ACLMessage.AGREE);
+                reply.setContentObject(scout.getGarbageCells());
             }
-        } catch (UnreadableException e) {
+        } catch (UnreadableException | IOException e) {
             reply.setPerformative(ACLMessage.FAILURE);
             scout.errorLog(e.getMessage());
         }
@@ -170,21 +169,36 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
 
     private void nextMove(ScoutAgent scout) {
         StreetCell currentPos = scout.getCurrentPosition();
-        int previousDir = scout.getCurrentDirection();     
+        int currentDir = scout.getCurrentDirection();     
         
+        scout.log("Current position: " + currentPos + "Current direction: " + currentDir);
         StreetCell[] priorityDirs = this.getPriorityDirections(scout);
         for (int dir = 0 ; dir < 4 ; ++dir) {
             // round-robin
-            int candidateDir = (previousDir + dir) % 4;
+            int candidateDir;
+            
+            if (currentDir != ScoutAgent.CENTER) {
+                candidateDir = (currentDir + dir) % 4;
+            } else {
+                candidateDir = dir;
+            }
+
+            scout.log("Current direction: " + currentDir + " dir: " + dir);            
+            scout.log("Evaluating candidate direction: " + candidateDir);
+            
             StreetCell candidatePos = priorityDirs[candidateDir];
+            scout.log("Evaluating candidate position: " + candidatePos);            
+            
             if (candidatePos != null && !candidatePos.isThereAnAgent()) {
                 InfoAgent scoutInfo = currentPos.getAgent();
                 try {
                     currentPos.removeAgent(scoutInfo);
                     candidatePos.addAgent(scoutInfo);                                    
                     scout.setCurrentDirection(candidateDir);
+                    scout.setCurrentPosition(candidatePos);
+                    break;
                 } catch (Exception e) {
-                    // TODO: review
+                    scout.log("Movement failed" + e);
                 }
             }
         }
@@ -202,8 +216,11 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
         for (Cell cell : scout.getAdjacentCells()) {
             // filter surrounding cells containing a street
             if (cell.getCellType() == CellType.STREET) {
-                StreetCell nextPos = (StreetCell) cell;                
-                dirs[getDirection(scout.getCurrentPosition(), nextPos)] = nextPos;
+                StreetCell nextPos = (StreetCell) cell;
+                int nextPosDir = getDirection(scout.getCurrentPosition(), nextPos);
+                if (nextPosDir != ScoutAgent.INVALID) {                            
+                    dirs[nextPosDir] = nextPos;                
+                }
             }
         }
         
@@ -235,7 +252,7 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
 
         int dy = origin.getRow() - target.getRow();
         int dx = origin.getCol() - target.getCol();
-
+        
         // map cell to directions
         if (dx == 0 && dy == 1)  return ScoutAgent.NORTH;
         if (dx == -1 && dy == 0) return ScoutAgent.EAST;

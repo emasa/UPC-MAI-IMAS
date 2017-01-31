@@ -57,6 +57,7 @@ public class ScoutAgent extends ImasAgent{
      */
     public ScoutAgent() {
         super(AgentType.SCOUT);
+        this.currentDirection = ScoutAgent.CENTER;
     }
 
     public StreetCell getCurrentPosition() {
@@ -99,23 +100,7 @@ public class ScoutAgent extends ImasAgent{
         } else {
             // Make the agent terminate immediately
             doDelete();
-        
-            this.addBehaviour(new CyclicBehaviour(this) {
-                public void action() {
-                    ACLMessage msg= receive();
-                    if (msg!=null){
-                        try {
-                            ScoutAgent scout = (ScoutAgent) this.getAgent();
-                            ArrayList<Cell> adjacentCells = (ArrayList<Cell>) msg.getContentObject();
-                            scout.setAdjacentCells(adjacentCells);
-                            System.out.println( " - " + myAgent.getLocalName() + " <- " + adjacentCells.size() );
-                        } catch (UnreadableException ex) {
-                            Logger.getLogger(ScoutCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
-                        }
-                    }
-                    block();
-                }
-            });
+
         }
         
         // add behaviours

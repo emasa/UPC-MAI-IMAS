@@ -76,15 +76,19 @@ public class RequesterBehaviour extends AchieveREInitiator {
                 stepsRequest.addReceiver(agent.getScoutCoordinatorAgent());
                 stepsRequest.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
                 agent.log("Request message to Scout Coordinator.");
-                HashMap<String,GameSettings> content = new HashMap<String, GameSettings>();
+                HashMap<String,GameSettings> content = new HashMap<>();
                 content.put(MessageContent.GET_SCOUT_STEPS, agent.getGame());
                 stepsRequest.setContentObject(content);
                 agent.addBehaviour(new RequesterBehaviour(agent, stepsRequest));
-            }else if(senderID.equals(agent.getScoutCoordinatorAgent())){
-//                agent.log("venimos del scout, supuestamente acabo el paso.");
+            } else if(senderID.equals(agent.getScoutCoordinatorAgent())) {
                 ArrayList<BuildingCell> garbageBuildings = (ArrayList<BuildingCell>) msg.getContentObject();
+                agent.log("Recieved from Scout Coordinator " + garbageBuildings);
+                
                 agent.addGarbageFound(garbageBuildings);
-                agent.log("total garbage to comunicate to Harvesters: "+garbageBuildings);
+                
+                // update list of agents
+                // TODO: revisar si va aca o en system
+                agent.getGame().updateAgentList();
             }
         } catch (Exception e) {
             agent.errorLog("Incorrect content: " + e.toString());

@@ -19,6 +19,7 @@ package cat.urv.imas.behaviour.scoutcoordinator;
 
 import cat.urv.imas.agent.AgentType;
 import cat.urv.imas.agent.ScoutCoordinatorAgent;
+import cat.urv.imas.map.BuildingCell;
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.GameSettings;
@@ -79,6 +80,10 @@ public class StepsResponseBehaviour extends AchieveREResponder {
                             return 0; 
                         } 
                     };
+                    
+                    // reset list of garbages
+                    agent.setGarbageBuildings(new ArrayList<BuildingCell>());
+                    
                     List<Cell> scoutsCells = game.getAgentList().get(AgentType.SCOUT);
                     for (int i = 0; i < scoutsCells.size(); i++) {
                         StreetCell scoutCell = (StreetCell) scoutsCells.get(i);
@@ -96,6 +101,7 @@ public class StepsResponseBehaviour extends AchieveREResponder {
                         scoutsSearch.addSubBehaviour(new RequestGarbageBehaviour(agent, cellsInform));
                     }
                     agent.addBehaviour(scoutsSearch);
+                    
                     reply.setPerformative(ACLMessage.AGREE);
                 }
             }else{
@@ -133,7 +139,7 @@ public class StepsResponseBehaviour extends AchieveREResponder {
         reply.setPerformative(ACLMessage.INFORM);
 
         try {
-            if(msg.getSender().equals(agent.getCoordinatorAgent())){
+            if(msg.getSender().equals(agent.getCoordinatorAgent())) {
                 reply.setContentObject(agent.getGarbageBuildings());
                 agent.log("reply with found garbage, and the scouts end their turns.");
             }else{
@@ -149,7 +155,6 @@ public class StepsResponseBehaviour extends AchieveREResponder {
         }
         agent.log("Response sent to:"+msg.getSender().getLocalName());
         return reply;
-
     }
 
     /**

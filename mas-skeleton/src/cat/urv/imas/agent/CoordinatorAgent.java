@@ -78,6 +78,9 @@ public class CoordinatorAgent extends ImasAgent {
      */
     public CoordinatorAgent() {
         super(AgentType.COORDINATOR);
+        garbageFound = new ArrayList<>();
+        garbageCollected = new ArrayList<>();
+        garbageCollecting = new ArrayList<>();        
     }
 
     /**
