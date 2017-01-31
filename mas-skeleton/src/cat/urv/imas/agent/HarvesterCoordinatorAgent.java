@@ -218,7 +218,7 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         addBehaviour(new SearchHarvesterBehaviour(this));
         addBehaviour(new ReceiveInfoBehaviour(this));
         addBehaviour(new CoalitionBehaviour(this));
-        return true;
+       // return true;
         //FIN DARIO
         
     }  
