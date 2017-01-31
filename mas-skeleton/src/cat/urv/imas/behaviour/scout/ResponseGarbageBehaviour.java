@@ -15,13 +15,21 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package cat.urv.imas.behaviour.system;
+package cat.urv.imas.behaviour.scout;
 
+import cat.urv.imas.agent.ScoutAgent;
+import cat.urv.imas.behaviour.scoutcoordinator.RequestGarbageBehaviour;
+import cat.urv.imas.map.Cell;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
-import jade.proto.AchieveREResponder;
-import cat.urv.imas.agent.SystemAgent;
+import jade.proto.AchieveREResponder;;
 import cat.urv.imas.onthology.MessageContent;
+import jade.core.AID;
+import jade.domain.FIPANames;
+import jade.lang.acl.UnreadableException;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
 
 /**
  * A request-responder behavior for System agent, answering to queries
@@ -29,7 +37,7 @@ import cat.urv.imas.onthology.MessageContent;
  * game information and the System Agent sends an AGREE and then an INFORM
  * with the city information.
  */
-public class RequestResponseBehaviour extends AchieveREResponder {
+public class ResponseGarbageBehaviour extends AchieveREResponder {
 
     /**
      * Sets up the System agent and the template of messages to catch.
@@ -37,8 +45,10 @@ public class RequestResponseBehaviour extends AchieveREResponder {
      * @param agent The agent owning this behavior
      * @param mt Template to receive future responses in this conversation
      */
-    public RequestResponseBehaviour(SystemAgent agent, MessageTemplate mt) {
+    public ResponseGarbageBehaviour(ScoutAgent agent, MessageTemplate mt) {
         super(agent, mt);
+//        BehaviourFreezer freezer = new BehaviourFreezer(agent);
+//        freezer.freeze(waitingBy, this);
         agent.log("Waiting REQUESTs from authorized agents");
     }
 
@@ -51,18 +61,28 @@ public class RequestResponseBehaviour extends AchieveREResponder {
      */
     @Override
     protected ACLMessage prepareResponse(ACLMessage msg) {
-        SystemAgent agent = (SystemAgent)this.getAgent();
+        ScoutAgent agent = (ScoutAgent) this.getAgent();
         ACLMessage reply = msg.createReply();
         try {
-            Object content = (Object) msg.getContent();
-            if (content.equals(MessageContent.GET_MAP)) {
-                agent.log("Request received");
+            HashMap<String,List<Cell>> content = (HashMap<String,List<Cell>>)msg.getContentObject();
+            if (content.keySet().iterator().next().equals(MessageContent.GET_GARBAGE)) {
+                ArrayList<Cell> adjacentCells = (ArrayList<Cell>) content.get(MessageContent.GET_GARBAGE);
+                agent.setAdjacentCells(adjacentCells);
+                agent.log( " - " + myAgent.getLocalName() + " <- " + adjacentCells.size() );
+                // TODO: perform seach of garbage in BuildingCell
+                // TODO: request movement
+                ACLMessage newCell = new ACLMessage(ACLMessage.REQUEST);
+                newCell.clearAllReceiver();
+                newCell.addReceiver(msg.getSender());
+                newCell.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+                agent.log("Request new Cell to agent: " + ((AID)newCell.getAllReceiver().next()).getLocalName());
+                newCell.setContent(MessageContent.NEW_CELL);
+                agent.addBehaviour(new RequestMovementBehaviour(agent, newCell));
                 reply.setPerformative(ACLMessage.AGREE);
             }
-        } catch (Exception e) {
+        } catch (UnreadableException e) {
             reply.setPerformative(ACLMessage.FAILURE);
             agent.errorLog(e.getMessage());
-            e.printStackTrace();
         }
         agent.log("Response being prepared");
         return reply;
@@ -86,18 +106,17 @@ public class RequestResponseBehaviour extends AchieveREResponder {
 
         // it is important to make the createReply in order to keep the same context of
         // the conversation
-        SystemAgent agent = (SystemAgent)this.getAgent();
+        ScoutAgent agent = (ScoutAgent)this.getAgent();
         ACLMessage reply = msg.createReply();
         reply.setPerformative(ACLMessage.INFORM);
-
         try {
-            reply.setContentObject(agent.getGame());
+            reply.setContentObject(agent.getGarbageCells());
         } catch (Exception e) {
             reply.setPerformative(ACLMessage.FAILURE);
             agent.errorLog(e.toString());
             e.printStackTrace();
         }
-        agent.log("Game settings sent");
+        agent.log("Cells with Garbage sent from: " + agent.getLocalName());
         return reply;
 
     }

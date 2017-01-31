@@ -22,14 +22,22 @@ import cat.urv.imas.behaviour.coordinator.RequesterBehaviour;
 import cat.urv.imas.onthology.InitialGameSettings;
 import cat.urv.imas.onthology.MessageContent;
 import cat.urv.imas.onthology.MessageWrapper;
+import cat.urv.imas.map.BuildingCell;
+import cat.urv.imas.map.SettableBuildingCell;
+import cat.urv.imas.onthology.GarbageType;
 import jade.core.*;
 import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.*;
+import jade.proto.ContractNetInitiator;
 import jade.domain.FIPAAgentManagement.*;
 import jade.domain.FIPANames.InteractionProtocol;
 import jade.lang.acl.*;
 import java.io.IOException;
 import java.util.concurrent.TimeUnit;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Vector;
+import java.util.Enumeration;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -56,6 +64,20 @@ public class CoordinatorAgent extends ImasAgent {
      * System agent id.
      */
     private AID systemAgent;
+    /**
+     * System agent id.
+     */    
+    private AID scoutCoordinatorAgent;
+    /**
+     * Harvester Coordinator agent id.
+     */
+    private AID hcAgent;
+    
+    ArrayList<BuildingCell> garbageFound = new ArrayList<>();
+    
+    ArrayList<BuildingCell> garbageCollected = new ArrayList<>();
+    
+    ArrayList<BuildingCell> garbageCollecting = new ArrayList<>();
 
     /**
      * Builds the coordinator agent.
@@ -70,20 +92,20 @@ public class CoordinatorAgent extends ImasAgent {
      */
     @Override
     protected void setup() {
-
         /* ** Very Important Line (VIL) ***************************************/
         this.setEnabledO2ACommunication(true, 1);
         /* ********************************************************************/
 
         // Register the agent to the DF
-        ServiceDescription sd1 = new ServiceDescription();
-        sd1.setType(AgentType.COORDINATOR.toString());
-        sd1.setName(getLocalName());
-        sd1.setOwnership(OWNER);
+        ServiceDescription ca = new ServiceDescription();
+        ca.setType(AgentType.COORDINATOR.toString());
+        ca.setName(getLocalName());
+        ca.setOwnership(OWNER);
         
         DFAgentDescription dfd = new DFAgentDescription();
-        dfd.addServices(sd1);
+        dfd.addServices(ca);
         dfd.setName(getAID());
+        
         try {
             DFService.register(this, dfd);
             log("Registered to the DF");
@@ -91,40 +113,114 @@ public class CoordinatorAgent extends ImasAgent {
             System.err.println(getLocalName() + " registration with DF unsucceeded. Reason: " + e.getMessage());
             doDelete();
         }
-
+       
         // search SystemAgent
         ServiceDescription searchCriterion = new ServiceDescription();
         searchCriterion.setType(AgentType.SYSTEM.toString());
         this.systemAgent = UtilsAgents.searchAgent(this, searchCriterion);
+        // search ScoutCoordinatorAgent
+        searchCriterion.setType(AgentType.SCOUT_COORDINATOR.toString());
+        this.scoutCoordinatorAgent = UtilsAgents.searchAgent(this, searchCriterion);
         // searchAgent is a blocking method, so we will obtain always a correct AID
 
         /* ********************************************************************/
-        ACLMessage initialRequest = new ACLMessage(ACLMessage.REQUEST);
-        initialRequest.clearAllReceiver();
-        initialRequest.addReceiver(this.systemAgent);
-        initialRequest.setProtocol(InteractionProtocol.FIPA_REQUEST);
+        ACLMessage gameRequest = new ACLMessage(ACLMessage.REQUEST);
+        gameRequest.clearAllReceiver();
+        gameRequest.addReceiver(this.systemAgent);
+        gameRequest.setProtocol(InteractionProtocol.FIPA_REQUEST);
         log("Request message to agent");
         try {
-            initialRequest.setContent(MessageContent.GET_MAP);
-            log("Request message content:" + initialRequest.getContent());
+            gameRequest.setContent(MessageContent.GET_MAP);
+            log("Request message content:" + gameRequest.getContent());
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-        //we add a behaviour that sends the message and waits for an answer
-        this.addBehaviour(new RequesterBehaviour(this, initialRequest));
-
         
+        //we add a behaviour that sends the message and waits for an answer
+        this.addBehaviour(new RequesterBehaviour(this, gameRequest));
         // setup finished. When we receive the last inform, the agent itself will add
         // a behaviour to send/receive actions
+        
+        /* ********************************************************************/
+        // contract net system
+        ServiceDescription searchHC = new ServiceDescription();     
+        searchHC.setType(AgentType.HARVESTER_COORDINATOR.toString());
+        this.hcAgent = UtilsAgents.searchAgent(this, searchHC);    
+        
+        // TODO: CHANGE THIS FOR GARBAGE LIST
+        ////////////// Dummy SettableBuildingCell 
+        SettableBuildingCell celda = new SettableBuildingCell(0, 1);
+        celda.setGarbage(GarbageType.PAPER, 2);
+        ///////////////
+        
+        // Fill the CFP message
+        ACLMessage contract = new ACLMessage(ACLMessage.CFP);
+        contract.addReceiver(this.hcAgent);
+        contract.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
+        // We want to receive a reply in 10 secs
+        contract.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
+        contract.setConversationId("C:dummy");
+        
+        try {
+            contract.setContentObject(celda);
+        } catch (IOException ex) {
+            Logger.getLogger(CoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        log("ContractNet Started");
+        System.out.println("1. "+getLocalName()+": sent contract "+contract.getConversationId());
+        
+        this.addBehaviour(new ContractNetInitiator(this, contract) {			
+            @Override
+            protected void handlePropose(ACLMessage propose, Vector v) {
+                // Receive Proposal
+
+                System.out.println("3. "+propose.getSender().getName()+": proposed a coalition on "+propose.getConversationId());
+            }
+
+            @Override
+            protected void handleRefuse(ACLMessage refuse) {
+                System.out.println("3. "+refuse.getSender().getName()+": refused "+refuse.getConversationId());
+            }
+
+            @Override
+            protected void handleFailure(ACLMessage failure) {
+                if (failure.getSender().equals(myAgent.getAMS())) {
+                    // FAILURE notification from the JADE runtime: the receiver
+                    // does not exist
+                    System.out.println("Responder does not exist");
+                }
+                else {
+                    System.out.println("Agent "+failure.getSender().getName()+" failed");
+                }
+            }
+
+            @Override
+            protected void handleAllResponses(Vector responses, Vector acceptances) {
+                // Accept Proposal. CA always accepts proposal
+                Enumeration e = responses.elements();
+                while (e.hasMoreElements()) {
+                    ACLMessage proposal = (ACLMessage) e.nextElement();                    
+                    ACLMessage accept = proposal.createReply();
+                    accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+                    acceptances.addElement(accept);
+                    accept.setContent(proposal.getContent()); 
+                    System.out.println("4. "+getLocalName()+": accepted proposal "+proposal.getContent()+" for contract "+proposal.getConversationId());
+                }             
+            }
+                        
+            @Override
+            protected void handleInform(ACLMessage inform) {
+                System.out.println("8. "+inform.getSender().getName()+" successfully performed "+inform.getConversationId());
+            }
+        });
     
 
         //INICIO DARIO
         //Add behaviour to inform basic info about game
         addBehaviour(new InitialInformToHarvesterCoordinatorAgentBehaviour(this));
     
-        
-        this.setGame(InitialGameSettings.load("game.settings"));
+        // comento esta linea, porque en este punto el coordinator ya debe tener seteada esa variable.
+        // this.setGame(InitialGameSettings.load("game.settings"));
         
         log("Initial configuration settings loaded");
         //FIN DARIO
@@ -200,5 +296,65 @@ public class CoordinatorAgent extends ImasAgent {
         }
     }
     //FIN DARIO
+    
+    public AID getScoutCoordinatorAgent() {
+        return scoutCoordinatorAgent;
+    }
+
+    public void setScoutCoordinatorAgent(AID scoutCoordinatorAgent) {
+        this.scoutCoordinatorAgent = scoutCoordinatorAgent;
+    }
+
+    public AID getSystemAgent() {
+        return systemAgent;
+    }
+
+    public void setSystemAgent(AID systemAgent) {
+        this.systemAgent = systemAgent;
+    }
+
+    public AID getHarvesterCoordinatorAgent() {
+        return harvesterCoordinatorAgent;
+    }
+
+    public void setHarvesterCoordinatorAgent(AID harvesterCoordinatorAgent) {
+        this.harvesterCoordinatorAgent = harvesterCoordinatorAgent;
+    }
+
+    public ArrayList<BuildingCell> getGarbageFound() {
+        return garbageFound;
+    }
+
+    public void setGarbageFound(ArrayList<BuildingCell> garbageFound) {
+        this.garbageFound = garbageFound;
+    }
+
+    public ArrayList<BuildingCell> getGarbageCollected() {
+        return garbageCollected;
+    }
+
+    public void setGarbageCollected(ArrayList<BuildingCell> garbageCollected) {
+        this.garbageCollected = garbageCollected;
+    }
+
+    public ArrayList<BuildingCell> getGarbageCollecting() {
+        return garbageCollecting;
+    }
+
+    public void setGarbageCollecting(ArrayList<BuildingCell> garbageCollecting) {
+        this.garbageCollecting = garbageCollecting;
+    }
+
+    public void addGarbageFound(ArrayList<BuildingCell> garbageFound) {
+        this.garbageFound.addAll(garbageFound);
+    }
+    
+    public void addGarbageCollecting(BuildingCell garbageCollecting) {
+        this.garbageCollecting.add(garbageCollecting);
+    }
+    
+    public void addGarbageCollected(BuildingCell garbageCollected) {
+        this.garbageCollecting.add(garbageCollected);
+    }
     
 }

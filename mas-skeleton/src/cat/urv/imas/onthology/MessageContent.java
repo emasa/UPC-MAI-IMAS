@@ -31,4 +31,22 @@ public class MessageContent {
     public static final String SETTABLE_BUILDING = "Settable Building";
     public static final String GARBAGE_TYPES = "GarbageTypes";
     
+    /**
+     * Message sent from Scout Coordinator agent to Scout agent to get the
+     * BuildingCells with garbage.
+     */
+    public static final String GET_GARBAGE = "Get garbage";
+    
+    /**
+     * Message sent from Scout Coordinator agent to Scout agent to get the
+     * BuildingCells with garbage.
+     */
+    public static final String GET_SCOUT_STEPS = "Get scout steps";
+    
+    /**
+     * Message sent from Scout Coordinator agent to Scout agent to get the
+     * BuildingCells with garbage.
+     */
+    public static final String NEW_CELL = "New cell";
+    
 }

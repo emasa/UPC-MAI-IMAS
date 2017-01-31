@@ -5,7 +5,6 @@
  */
 package cat.urv.imas.agent;
 
-
 import cat.urv.imas.behaviour.harvestercoordinator.CoalitionBehaviour;
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.CellType;
@@ -29,10 +28,16 @@ import java.util.concurrent.TimeUnit;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.ArrayList;
-
+import static cat.urv.imas.agent.ImasAgent.OWNER;
+import jade.lang.acl.MessageTemplate;
+import jade.proto.ContractNetResponder;
+import jade.domain.FIPAAgentManagement.NotUnderstoodException;
+import jade.domain.FIPAAgentManagement.RefuseException;
+import jade.domain.FIPAAgentManagement.FailureException;
+import java.io.IOException;
 /**
  *
- * @author Dario
+ * @author Daniel, Dario, Pablo, Angel y Emanuel
  */
 public class HarvesterCoordinatorAgent extends ImasAgent{
      /**
@@ -100,9 +105,91 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
 
     @Override
     protected void setup() {
+        /* ** Very Important Line (VIL) ***************************************/
+        this.setEnabledO2ACommunication(true, 1);
+        /* ********************************************************************/
+
+        // Register the agent to the DF
+        ServiceDescription hca = new ServiceDescription();
+        hca.setType(AgentType.HARVESTER_COORDINATOR.toString());
+        hca.setName(getLocalName());
+        hca.setOwnership(OWNER);
         
-        
+        DFAgentDescription dfd = new DFAgentDescription();
+        dfd.addServices(hca);
+        dfd.setName(getAID());
+        try {
+            DFService.register(this, dfd);
+            log("Registered to the DF");
+        } catch (FIPAException e) {
+            System.err.println(getLocalName() + " registration with DF unsucceeded. Reason: " + e.getMessage());
+            doDelete();
+        }        
         log("Creatad new Harvester Coordinator: " + getLocalName());
+
+        /* ********************************************************************/    
+        // contract net system        
+        System.out.println("Agent "+getLocalName()+" waiting for CFP...");
+  	MessageTemplate template = MessageTemplate.and(
+            MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
+            MessageTemplate.MatchPerformative(ACLMessage.CFP) );
+  		
+	addBehaviour(new ContractNetResponder(this, template) {
+            @Override
+            protected ACLMessage prepareResponse(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
+                SettableBuildingCell proposal = null;
+                try {
+                    // Call evaluateAction to convert cfp to SettableBuildingCell
+                    proposal = evaluateAction(cfp);
+                    System.out.println("2. "+getLocalName()+": contract "+cfp.getConversationId()+" received from "+cfp.getSender().getName());
+                } catch (UnreadableException ex) {
+                    Logger.getLogger(HarvesterCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
+                    System.out.println("2. "+getLocalName()+": Refuse");
+                    throw new RefuseException("evaluation-failed");                    
+                }
+                // Provide a proposal: HC always accepts proposal           
+                ACLMessage propose = cfp.createReply();
+                propose.setPerformative(ACLMessage.PROPOSE);
+                try {
+                    propose.setContentObject(proposal);
+                } catch (IOException ex) {
+                    Logger.getLogger(CoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
+                }                
+                propose.setContent(String.valueOf(proposal));                 
+                return propose;              
+            }
+			
+            @Override
+            protected ACLMessage prepareResultNotification(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
+                System.out.println("5. "+getLocalName()+": proposal for contract "+accept.getConversationId()+" was accepted");
+		if (performAction()) {
+                    System.out.println("7. "+getLocalName()+": Action successfully performed on "+accept.getConversationId());
+                    ACLMessage inform = accept.createReply();
+                    inform.setPerformative(ACLMessage.INFORM);
+                    inform.setContent(accept.getContent());
+                    return inform;
+		}
+		else {
+                    System.out.println("7. "+getLocalName()+": action execution failed on "+accept.getConversationId());
+                    throw new FailureException("unexpected-error");
+		}	
+            }
+			
+            protected void handleRejectProposal(ACLMessage reject) {
+                System.out.println("5. "+getLocalName()+": Proposal:"+reject.getConversationId()+" rejected");
+            }
+        } );
+    }
+  
+    private SettableBuildingCell evaluateAction(ACLMessage contract) throws UnreadableException {
+  	// Convert ACLMessage to SettableBuildingCell
+        SettableBuildingCell proposal = (SettableBuildingCell) contract.getContentObject();
+
+  	return proposal;
+    }
+  
+    private boolean performAction() { 
+        System.out.println("6. "+getLocalName()+": formed a coalition");
         
         //INICIO DARIO
         // Register the service
@@ -188,6 +275,10 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
                 //block();
             }
         }
+  	// Call coalition to collect garbage
+//        MessageWrapper messageCoalition = new MessageWrapper.setObject();
+        // coalition(cellBuilding)
+  	return true;
     }
     
     
@@ -265,11 +356,5 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
             
     
 //FIN DARIO
-        
-        
-        
-        
-        
-       
-
-
+     
+}
