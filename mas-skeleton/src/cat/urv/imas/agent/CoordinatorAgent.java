@@ -314,11 +314,11 @@ public class CoordinatorAgent extends ImasAgent {
     }
 
     public AID getHarvesterCoordinatorAgent() {
-        return harvesterCoordinatorAgent;
+        return hcAgent;
     }
 
     public void setHarvesterCoordinatorAgent(AID harvesterCoordinatorAgent) {
-        this.harvesterCoordinatorAgent = harvesterCoordinatorAgent;
+        this.hcAgent = harvesterCoordinatorAgent;
     }
 
     public ArrayList<BuildingCell> getGarbageFound() {

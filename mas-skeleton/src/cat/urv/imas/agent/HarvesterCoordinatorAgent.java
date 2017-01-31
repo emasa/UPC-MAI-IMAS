@@ -218,11 +218,10 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         addBehaviour(new SearchHarvesterBehaviour(this));
         addBehaviour(new ReceiveInfoBehaviour(this));
         addBehaviour(new CoalitionBehaviour(this));
-        
+        return true;
         //FIN DARIO
         
-        
-    }    
+    }  
     
     
     //INICIO DARIO
@@ -278,7 +277,7 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
   	// Call coalition to collect garbage
 //        MessageWrapper messageCoalition = new MessageWrapper.setObject();
         // coalition(cellBuilding)
-  	return true;
+  	
     }
     
     
@@ -356,5 +355,3 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
             
     
 //FIN DARIO
-     
-}
