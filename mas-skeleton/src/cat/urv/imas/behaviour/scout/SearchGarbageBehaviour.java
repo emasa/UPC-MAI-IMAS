@@ -72,7 +72,7 @@ public class SearchGarbageBehaviour extends OneShotBehaviour {
                 InfoAgent scoutInfo = currentPos.getAgent();
                 try {
                     currentPos.removeAgent(scoutInfo);
-                    candidatePos.addAgent(scoutInfo);                                    
+                    candidatePos.addAgent(scoutInfo);                                
                     scout.setCurrentDirection(candidateDir);
                 } catch (Exception e) {
                     // TODO: review

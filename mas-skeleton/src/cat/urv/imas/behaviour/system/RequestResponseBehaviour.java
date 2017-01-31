@@ -22,6 +22,10 @@ import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREResponder;
 import cat.urv.imas.agent.SystemAgent;
 import cat.urv.imas.onthology.MessageContent;
+import cat.urv.imas.onthology.MessageWrapper;
+import jade.core.behaviours.SequentialBehaviour;
+import jade.lang.acl.UnreadableException;
+import java.io.IOException;
 
 /**
  * A request-responder behavior for System agent, answering to queries
@@ -52,17 +56,44 @@ public class RequestResponseBehaviour extends AchieveREResponder {
     @Override
     protected ACLMessage prepareResponse(ACLMessage msg) {
         SystemAgent agent = (SystemAgent)this.getAgent();
-        ACLMessage reply = msg.createReply();
+        ACLMessage reply = msg.createReply();    
+        
         try {
-            Object content = (Object) msg.getContent();
-            if (content.equals(MessageContent.GET_MAP)) {
-                agent.log("Request received");
-                reply.setPerformative(ACLMessage.AGREE);
+            MessageWrapper wrapper = (MessageWrapper) msg.getContentObject();
+            if (wrapper != null) {
+                switch (wrapper.getType()) {
+                    case MessageContent.GET_MAP:
+                        agent.log("Request received: " + MessageContent.GET_MAP);
+                        reply.setPerformative(ACLMessage.AGREE);                        
+                        break;
+                    case MessageContent.STEP_FINISHED:
+                        // update list of agents
+                        agent.getGame().updateAgentList();
+
+                        agent.log("Notification recieved " + MessageContent.STEP_FINISHED);
+                        // no need to answer
+                        reply = null;
+                        int step = agent.getGame().getCurrentSimulationSteps();
+
+                        // TODO: falta harvester finish!
+                        
+                        agent.log("Step: " + step + " finished");
+                        
+                        if (step < agent.getGame().getSimulationSteps()) {
+                            agent.getGame().setCurrentSimulationSteps(step + 1);
+                            
+                            SequentialBehaviour runStep = new SequentialBehaviour(agent);
+                            runStep.addSubBehaviour(new NewGarbageBehaviour(agent));
+                            runStep.addSubBehaviour(new SendNewStep(agent, agent.createNewStep()));
+                            agent.addBehaviour(runStep);
+                        }
+                        
+                        break;
+                }
             }
-        } catch (Exception e) {
+        } catch (UnreadableException e) {
             reply.setPerformative(ACLMessage.FAILURE);
             agent.errorLog(e.getMessage());
-            e.printStackTrace();
         }
         agent.log("Response being prepared");
         return reply;
@@ -84,22 +115,31 @@ public class RequestResponseBehaviour extends AchieveREResponder {
     @Override
     protected ACLMessage prepareResultNotification(ACLMessage msg, ACLMessage response) {
 
-        // it is important to make the createReply in order to keep the same context of
-        // the conversation
         SystemAgent agent = (SystemAgent)this.getAgent();
-        ACLMessage reply = msg.createReply();
-        reply.setPerformative(ACLMessage.INFORM);
-
+        ACLMessage reply = msg.createReply();    
+        
         try {
-            reply.setContentObject(agent.getGame());
-        } catch (Exception e) {
+            MessageWrapper msgWrapper = (MessageWrapper) msg.getContentObject();
+            if (msgWrapper != null) {
+                switch (msgWrapper.getType()) {
+                    case MessageContent.GET_MAP:
+                        MessageWrapper replyWrapper = new MessageWrapper();
+                        // game is initialized in the setup
+                        replyWrapper.setType(MessageContent.GET_MAP_REPLY);
+                        reply.setContentObject(replyWrapper);
+                        reply.setPerformative(ACLMessage.INFORM);
+                        agent.log("Response to: " + MessageContent.GET_MAP);
+                        
+                        break;
+                }
+                
+            }
+        } catch (UnreadableException |IOException e) {
             reply.setPerformative(ACLMessage.FAILURE);
-            agent.errorLog(e.toString());
-            e.printStackTrace();
+            agent.errorLog(e.getMessage());
         }
-        agent.log("Game settings sent");
-        return reply;
 
+        return reply;
     }
 
     /**

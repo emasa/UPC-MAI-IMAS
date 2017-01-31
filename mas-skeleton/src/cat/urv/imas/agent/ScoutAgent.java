@@ -11,6 +11,7 @@ import cat.urv.imas.behaviour.scout.ResponseGarbageBehaviour;
 import cat.urv.imas.map.BuildingCell;
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.StreetCell;
+import cat.urv.imas.onthology.GameSettings;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
@@ -51,6 +52,7 @@ public class ScoutAgent extends ImasAgent{
      * round.
      */
     private ArrayList<BuildingCell> garbageCells;
+    private GameSettings game;
     
      /**
      * Builds the coordinator agent.
@@ -96,17 +98,25 @@ public class ScoutAgent extends ImasAgent{
         if (args != null && args.length > 0) {
             position = (StreetCell) args[0];
             position.getAgent().setAID(getAID());
+            this.game = (GameSettings) args[1];            
             log("At (" + position.getRow() + " , " + position.getCol() + ")");
         } else {
             // Make the agent terminate immediately
             doDelete();
-
         }
         
         // add behaviours
         // we wait for the initialization of the game
         MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
         this.addBehaviour(new ResponseGarbageBehaviour(this, mt));
+    }
+
+    public GameSettings getGame() {
+        return game;
+    }
+
+    public void setGame(GameSettings game) {
+        this.game = game;
     }
 
     public ArrayList<Cell> getAdjacentCells() {

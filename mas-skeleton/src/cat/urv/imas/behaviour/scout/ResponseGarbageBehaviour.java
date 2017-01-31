@@ -69,14 +69,6 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
 
                 // perform search of garbage and movement
                 this.execute(scout);
-                
-//                ACLMessage newCell = new ACLMessage(ACLMessage.REQUEST);
-//                newCell.clearAllReceiver();
-//                newCell.addReceiver(msg.getSender());
-//                newCell.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-//                agent.log("Request new Cell to agent: " + ((AID)newCell.getAllReceiver().next()).getLocalName());
-//                newCell.setContent(MessageContent.NEW_CELL);
-//                agent.addBehaviour(new RequestMovementBehaviour(agent, newCell));
 
                 reply.setPerformative(ACLMessage.AGREE);
                 reply.setContentObject(scout.getGarbageCells());
@@ -110,14 +102,15 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
         ScoutAgent agent = (ScoutAgent)this.getAgent();
         ACLMessage reply = msg.createReply();
         reply.setPerformative(ACLMessage.INFORM);
-        try {
+        try {            
             reply.setContentObject(agent.getGarbageCells());
+            agent.log("Cells with Garbage sent from: " + agent.getLocalName());
         } catch (Exception e) {
             reply.setPerformative(ACLMessage.FAILURE);
             agent.errorLog(e.toString());
             e.printStackTrace();
         }
-        agent.log("Cells with Garbage sent from: " + agent.getLocalName());
+
         return reply;
 
     }
@@ -192,10 +185,16 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
             if (candidatePos != null && !candidatePos.isThereAnAgent()) {
                 InfoAgent scoutInfo = currentPos.getAgent();
                 try {
-                    currentPos.removeAgent(scoutInfo);
-                    candidatePos.addAgent(scoutInfo);                                    
+                    //currentPos.removeAgent(scoutInfo);
+                    //candidatePos.addAgent(scoutInfo);
+
+                    StreetCell currentPos2 = (StreetCell) scout.getGame().get(currentPos.getRow(), currentPos.getCol());
+                    StreetCell candidatePos2 = (StreetCell) scout.getGame().get(candidatePos.getRow(), candidatePos.getCol());
+                    currentPos2.removeAgent(scoutInfo);
+                    candidatePos2.addAgent(scoutInfo);    
                     scout.setCurrentDirection(candidateDir);
-                    scout.setCurrentPosition(candidatePos);
+                    scout.setCurrentPosition(candidatePos2);
+                    
                     break;
                 } catch (Exception e) {
                     scout.log("Movement failed" + e);
@@ -217,6 +216,7 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
             // filter surrounding cells containing a street
             if (cell.getCellType() == CellType.STREET) {
                 StreetCell nextPos = (StreetCell) cell;
+                scout.log("Testing " + nextPos.toString());
                 int nextPosDir = getDirection(scout.getCurrentPosition(), nextPos);
                 if (nextPosDir != ScoutAgent.INVALID) {                            
                     dirs[nextPosDir] = nextPos;                

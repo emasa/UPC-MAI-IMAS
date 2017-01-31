@@ -27,6 +27,7 @@ import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREResponder;
 import cat.urv.imas.onthology.MessageContent;
+import cat.urv.imas.onthology.MessageWrapper;
 import jade.core.AID;
 import jade.core.behaviours.ParallelBehaviour;
 import jade.domain.FIPANames;
@@ -35,6 +36,8 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A request-responder behavior for System agent, answering to queries
@@ -67,51 +70,50 @@ public class StepsResponseBehaviour extends AchieveREResponder {
         ScoutCoordinatorAgent agent = (ScoutCoordinatorAgent)this.getAgent();
         ACLMessage reply = msg.createReply();
         try {
-            if(msg.getSender().equals(agent.getCoordinatorAgent())){
-                HashMap<String,GameSettings> content = (HashMap<String,GameSettings>) msg.getContentObject();
-                if (content.keySet().iterator().next().equals(MessageContent.GET_SCOUT_STEPS)) {
-                    agent.log("Request Steps received");
-                    GameSettings game = (GameSettings) content.get(MessageContent.GET_SCOUT_STEPS);
-                    agent.setGame(game);
-                    ParallelBehaviour scoutsSearch = new ParallelBehaviour(agent, ParallelBehaviour.WHEN_ALL){ 
-                        @Override
-                        public int onEnd() { 
-                            System.out.println("Behavior finalized with success!"); 
-                            return 0; 
-                        } 
-                    };
-                    
-                    // reset list of garbages
-                    agent.setGarbageBuildings(new ArrayList<BuildingCell>());
-                    
-                    List<Cell> scoutsCells = game.getAgentList().get(AgentType.SCOUT);
-                    for (int i = 0; i < scoutsCells.size(); i++) {
-                        StreetCell scoutCell = (StreetCell) scoutsCells.get(i);
-                        AID scout = scoutCell.getAgent().getAID();
-                        ArrayList<Cell> adjacentCells = game.getAdjacentCells(scoutCell);
-                        ACLMessage cellsInform = new ACLMessage(ACLMessage.REQUEST);
-                        cellsInform.clearAllReceiver();
-                        cellsInform.addReceiver(scout);
-                        cellsInform.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-                        agent.log("Request message to agent: " + scout.getLocalName());
-                        agent.addScoutAdjacentCells(scout, adjacentCells);
-                        HashMap<String,List<Cell>> contentRequest = new HashMap<>();
-                        contentRequest.put(MessageContent.GET_GARBAGE, adjacentCells);
-                        cellsInform.setContentObject(contentRequest);
-                        scoutsSearch.addSubBehaviour(new RequestGarbageBehaviour(agent, cellsInform));
+            MessageWrapper msgWrapper = (MessageWrapper) msg.getContentObject();
+            if (msgWrapper != null) {
+                switch (msgWrapper.getType()) {
+                    case MessageContent.GET_SCOUT_STEPS:
+                    {
+                        agent.log("Request Steps received");
+                        ParallelBehaviour scoutsSearch = new ParallelBehaviour(agent, ParallelBehaviour.WHEN_ALL){ 
+                            @Override
+                            public int onEnd() { 
+                                System.out.println("Behavior finalized with success!"); 
+                                ScoutCoordinatorAgent agent = (ScoutCoordinatorAgent)this.getAgent();
+                                agent.addBehaviour(new SendGarbageBehaviour(agent, agent.createSendGarbage()));
+                                return 0; 
+                            } 
+                        };
+
+                        List<Cell> scoutsCells = agent.getGame().getAgentList().get(AgentType.SCOUT);
+                        for (int i = 0; i < scoutsCells.size(); i++) {
+                            StreetCell scoutCell = (StreetCell) scoutsCells.get(i);
+                            agent.log("New cells for scout in: " + scoutCell);
+                            AID scout = scoutCell.getAgent().getAID();
+                            ArrayList<Cell> adjacentCells = agent.getGame().getAdjacentCells(scoutCell);
+                            ACLMessage cellsInform = new ACLMessage(ACLMessage.REQUEST);
+                            cellsInform.clearAllReceiver();
+                            cellsInform.addReceiver(scout);
+                            cellsInform.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
+                            agent.log("Request message to agent: " + scout.getLocalName());
+                            agent.addScoutAdjacentCells(scout, adjacentCells);
+                            HashMap<String,List<Cell>> contentRequest = new HashMap<>();
+                            contentRequest.put(MessageContent.GET_GARBAGE, adjacentCells);
+                            cellsInform.setContentObject(contentRequest);
+                            scoutsSearch.addSubBehaviour(new RequestGarbageBehaviour(agent, cellsInform));
+                        }
+                        agent.addBehaviour(scoutsSearch);
+                        reply.setPerformative(ACLMessage.AGREE);
+                        break; 
                     }
-                    agent.addBehaviour(scoutsSearch);
-                    
-                    reply.setPerformative(ACLMessage.AGREE);
                 }
-            }else{
-                agent.log(msg.getSender().getLocalName()+"Request new position");
-                reply.setPerformative(ACLMessage.AGREE);
             }
         } catch (UnreadableException | IOException e) {
             reply.setPerformative(ACLMessage.FAILURE);
             agent.errorLog(e.getMessage());
         }
+        
         agent.log("Response being prepared");
         return reply;
     }
@@ -131,24 +133,22 @@ public class StepsResponseBehaviour extends AchieveREResponder {
      */
     @Override
     protected ACLMessage prepareResultNotification(ACLMessage msg, ACLMessage response) {
-
-        // it is important to make the createReply in order to keep the same context of
-        // the conversation
         ScoutCoordinatorAgent agent = (ScoutCoordinatorAgent)this.getAgent();
         ACLMessage reply = msg.createReply();
         reply.setPerformative(ACLMessage.INFORM);
 
         try {
-            if(msg.getSender().equals(agent.getCoordinatorAgent())) {
-                reply.setContentObject(agent.getGarbageBuildings());
-                agent.log("reply with found garbage, and the scouts end their turns.");
-            }else{
-                StreetCell newPosition = agent.getNewPosition(msg.getSender());
-//                oldPosition.removeAgent(Agent);
-//                newPosition.addAgent(Agent);
-                reply.setContentObject(newPosition);
+            MessageWrapper msgWrapper = (MessageWrapper) msg.getContentObject();
+            if (msgWrapper != null) {
+                switch (msgWrapper.getType()) {
+                    case MessageContent.GET_SCOUT_STEPS:
+                        MessageWrapper replyWrapper = new MessageWrapper();
+                        replyWrapper.setType(MessageContent.GET_SCOUT_STEPS_REPLY);
+                        reply.setContentObject(replyWrapper);
+                        break;            
+                }
             }
-        } catch (Exception e) {
+        } catch (UnreadableException | IOException e) {
             reply.setPerformative(ACLMessage.FAILURE);
             agent.errorLog(e.toString());
             e.printStackTrace();

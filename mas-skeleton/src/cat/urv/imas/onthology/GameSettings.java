@@ -98,6 +98,7 @@ public class GameSettings implements java.io.Serializable {
      * Title to set to the GUI.
      */
     protected String title = "Demo title";
+    private int currentSimulationSteps;
     
 
     public float getSeed() {
@@ -148,6 +149,15 @@ public class GameSettings implements java.io.Serializable {
         this.simulationSteps = simulationSteps;
     }
 
+    public int getCurrentSimulationSteps() {
+        return currentSimulationSteps;
+    }
+
+    @XmlElement(required = true)
+    public void setCurrentSimulationSteps(int simulationSteps) {
+        this.currentSimulationSteps = simulationSteps;
+    }    
+    
     public String getTitle() {
         return title;
     }
