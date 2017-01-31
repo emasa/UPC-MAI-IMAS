@@ -27,5 +27,8 @@ public class MessageContent {
      * city information.
      */
     public static final String GET_MAP = "Get map";
+    public static final String SEND_GAME = "Game";
+    public static final String SETTABLE_BUILDING = "Settable Building";
+    public static final String GARBAGE_TYPES = "GarbageTypes";
     
 }

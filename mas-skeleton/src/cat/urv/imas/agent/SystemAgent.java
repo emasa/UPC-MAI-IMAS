@@ -137,9 +137,9 @@ public class SystemAgent extends ImasAgent {
         try {
             AgentController agentController = cc.createNewAgent("Coordinator Agent", CoordinatorAgent.class.getName(), null);
             agentController.start();
-            agentController = cc.createNewAgent("Harvester Coordinator Agent", HarvesterCoordinatorAgent.class.getName(), null);
-            agentController.start();
             agentController = cc.createNewAgent("Scout Coordinator Agent", ScoutCoordinatorAgent.class.getName(), null);
+            agentController.start();
+            agentController = cc.createNewAgent("Harvester Coordinator Agent", HarvesterCoordinatorAgent.class.getName(), null);
             agentController.start();
             for (Map.Entry<AgentType,List<Cell>> entry : game.getAgentList().entrySet()) {
                 String currentKey = entry.getKey().getShortString();
@@ -162,6 +162,8 @@ public class SystemAgent extends ImasAgent {
                     // nunca entra
                     log(entry.getValue().toString());
                 }
+            
+            
             }
             this.gui = new GraphicInterface(game);
             gui.setVisible(true);
@@ -184,6 +186,13 @@ public class SystemAgent extends ImasAgent {
 
         // Setup finished. When the last inform is received, the agent itself will add
         // a behaviour to send/receive actions
+        
+        
+    
+    
+    
+    
+    
     }
     
     public void updateGUI() {

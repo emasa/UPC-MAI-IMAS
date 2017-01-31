@@ -227,5 +227,9 @@ public class GameSettings implements java.io.Serializable {
         //TODO: list of agents
         return "Game settings: agent related string";
     }
+
+    public void setGame() {
+        throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+    }
     
 }
