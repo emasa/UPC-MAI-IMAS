@@ -142,7 +142,7 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
                     // Call evaluateAction to convert cfp to SettableBuildingCell
                     proposal = evaluateAction(cfp);
                     System.out.println("2. "+getLocalName()+": contract "+cfp.getConversationId()+" received from "+cfp.getSender().getName());
-                } catch (UnreadableException ex) {
+		} catch (UnreadableException ex) {
                     Logger.getLogger(HarvesterCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
                     System.out.println("2. "+getLocalName()+": Refuse");
                     throw new RefuseException("evaluation-failed");                    
@@ -357,4 +357,3 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
     
 //FIN DARIO
      
-}
