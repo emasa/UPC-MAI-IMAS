@@ -7,6 +7,7 @@ package cat.urv.imas.agent;
 
 import static cat.urv.imas.agent.ImasAgent.OWNER;
 import cat.urv.imas.map.SettableBuildingCell;
+import cat.urv.imas.onthology.GameSettings;
 import cat.urv.imas.onthology.MessageWrapper;
 
 import jade.domain.DFService;
@@ -29,6 +30,8 @@ import java.util.logging.Logger;
  * @author Daniel, Dario, Pablo, Angel y Emanuel
  */
 public class HarvesterCoordinatorAgent extends ImasAgent{
+
+    private GameSettings game;
      /**
      * Builds the coordinator agent.
      */
@@ -57,7 +60,16 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         } catch (FIPAException e) {
             System.err.println(getLocalName() + " registration with DF unsucceeded. Reason: " + e.getMessage());
             doDelete();
-        }        
+        }
+        
+        Object[] args = getArguments();
+        if (args != null && args.length > 0) {
+            this.game = (GameSettings) args[0];
+        } else {
+            // Make the agent terminate immediately
+            doDelete();
+        }
+        
         log("Creatad new Harvester Coordinator: " + getLocalName());
 
         /* ********************************************************************/    
@@ -112,6 +124,14 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
                 System.out.println("5. "+getLocalName()+": Proposal:"+reject.getConversationId()+" rejected");
             }
         } );
+    }
+
+    public GameSettings getGame() {
+        return game;
+    }
+
+    public void setGame(GameSettings game) {
+        this.game = game;
     }
   
     private SettableBuildingCell evaluateAction(ACLMessage contract) throws UnreadableException {

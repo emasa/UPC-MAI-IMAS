@@ -50,7 +50,7 @@ public class PathFinderBehaviour {
         
         //Initializing the map
         HarvesterCoordinatorAgent hca = new HarvesterCoordinatorAgent();
-        this.cell_map = hca.getMap();
+        this.cell_map = hca.getGame().getMap();
         
         //Init Harvester & Garbage Positions
         this.haversterCoord = harvestersCoord;
