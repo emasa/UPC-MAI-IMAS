@@ -17,7 +17,6 @@
  */
 package cat.urv.imas.agent;
 
-import cat.urv.imas.behaviour.scoutcoordinator.SendGarbageBehaviour;
 import cat.urv.imas.behaviour.system.NewGarbageBehaviour;
 import cat.urv.imas.onthology.InitialGameSettings;
 import cat.urv.imas.onthology.GameSettings;
@@ -28,7 +27,6 @@ import cat.urv.imas.map.Cell;
 import cat.urv.imas.onthology.MessageContent;
 import cat.urv.imas.onthology.MessageWrapper;
 import jade.core.*;
-import jade.core.behaviours.ParallelBehaviour;
 import jade.core.behaviours.SequentialBehaviour;
 import jade.domain.*;
 import jade.domain.FIPAAgentManagement.*;

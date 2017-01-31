@@ -17,12 +17,29 @@
  */
 package cat.urv.imas.behaviour.coordinator;
 
+import cat.urv.imas.agent.AgentType;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import cat.urv.imas.agent.CoordinatorAgent;
-import cat.urv.imas.onthology.MessageContent;
 import cat.urv.imas.onthology.MessageWrapper;
+import cat.urv.imas.agent.UtilsAgents;
+import cat.urv.imas.map.BuildingCell;
+import cat.urv.imas.map.SettableBuildingCell;
+import cat.urv.imas.onthology.GameSettings;
+import cat.urv.imas.onthology.GarbageType;
+import cat.urv.imas.onthology.MessageContent;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPANames;
+import jade.proto.ContractNetInitiator;
+import java.io.IOException;
+import java.util.ArrayList;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.HashMap;
+import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * Behaviour for the Coordinator agent to deal with AGREE messages.
@@ -62,21 +79,99 @@ public class RequesterBehaviour extends AchieveREInitiator {
         AID senderID = (AID) msg.getSender();
         agent.log("INFORM received from " + senderID.getLocalName());
         try {
-            MessageWrapper msgWrapper = (MessageWrapper) msg.getContentObject();
-            if (msgWrapper != null) {
-                switch (msgWrapper.getType()) {
-                    case MessageContent.GET_MAP_REPLY:
-                        // game is initialized in the setup                        reply.setPerformative(ACLMessage.INFORM);                        reply.setPerformative(ACLMessage.INFORM);                        reply.setPerformative(ACLMessage.INFORM);                        reply.setPerformative(ACLMessage.INFORM);
-                        agent.addBehaviour(new RequesterBehaviour(agent, agent.createNewStepRequest()));
-                        agent.log("First simulation step starts when the map is recieved");                        
-                        
-                        break;
+            if(senderID.equals(agent.getScoutCoordinatorAgent())){
+//                agent.log("venimos del scout, supuestamente acabo el paso.");
+
+                //ADD MANUALLY GARBAGE TO TEST COALITION
+                ArrayList<SettableBuildingCell> SettableBuildingCellList = new ArrayList<>();
+                      
+                SettableBuildingCell g1 = new SettableBuildingCell(3,3);
+                g1.setGarbage(GarbageType.PAPER, 10);
+                SettableBuildingCell g2 = new SettableBuildingCell(16,3);
+                g2.setGarbage(GarbageType.GLASS, 20);
+                SettableBuildingCell g3 = new SettableBuildingCell(3,7);
+                g3.setGarbage(GarbageType.PLASTIC, 20);
+                SettableBuildingCellList.add(g1);
+                SettableBuildingCellList.add(g2);
+                SettableBuildingCellList.add(g3);
+                
+//                ArrayList<BuildingCell> garbageBuildings = (ArrayList<BuildingCell>) msg.getContentObject();
+//                agent.addGarbageFound(garbageBuildings);
+//                agent.log("total garbage to comunicate to Harvesters: "+garbageBuildings);
+             
+                /* ********************************************************************/
+                // contract net system
+                ServiceDescription searchHC = new ServiceDescription();     
+                searchHC.setType(AgentType.HARVESTER_COORDINATOR.toString());
+                agent.setHarvesterCoordinatorAgent(UtilsAgents.searchAgent(agent, searchHC));    
+                
+                // Cycle through garbageBuildings to get cell and start a ContractNet
+                for (int i = 0; i < SettableBuildingCellList.size(); i++) {
+                    BuildingCell celda = SettableBuildingCellList.remove(i);
+                    // Fill the CFP message
+                    ACLMessage contract = new ACLMessage(ACLMessage.CFP);
+                    contract.addReceiver(agent.getHarvesterCoordinatorAgent());             // Receiver is HarvesterCoordinator
+                    contract.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);  // ContractNet protocol
+                    contract.setReplyByDate(new Date(System.currentTimeMillis() + 10000));  // We want to receive a reply in 10 secs
+                    contract.setConversationId("Contract: "+i);                             // ConversationID                    
+                    System.out.println("1. "+agent.getLocalName()+": sent contract "+contract.getConversationId());
+                    
+                    try {
+                        contract.setContentObject(celda);
+                    } catch (IOException ex) {
+                        Logger.getLogger(CoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    agent.log("ContractNet Started");                    
+                    
+                    agent.addBehaviour(new ContractNetInitiator(agent, contract) {
+                        @Override
+                        protected void handlePropose(ACLMessage propose, Vector v) {
+                            // Receive Proposal
+                            System.out.println("3. "+propose.getSender().getName()+": proposed a coalition on "+propose.getConversationId());
+                        }
+
+                        @Override
+                        protected void handleRefuse(ACLMessage refuse) {
+                            System.out.println("3. "+refuse.getSender().getName()+": refused "+refuse.getConversationId());
+                        }
+
+                        @Override
+                        protected void handleFailure(ACLMessage failure) {
+                            if (failure.getSender().equals(myAgent.getAMS())) {
+                                // FAILURE notification from the JADE runtime: the receiver
+                                // does not exist
+                                System.out.println("Responder does not exist");
+                            }
+                            else {
+                                System.out.println("Agent "+failure.getSender().getName()+" failed "+failure.getConversationId());
+                            }
+                        }
+
+                        @Override
+                        protected void handleAllResponses(Vector responses, Vector acceptances) {
+                            // Accept Proposal. CA always accepts proposal
+                            Enumeration e = responses.elements();
+                            while (e.hasMoreElements()) {
+                                ACLMessage proposal = (ACLMessage) e.nextElement();                    
+                                ACLMessage accept = proposal.createReply();
+                                accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+                                acceptances.addElement(accept);
+                                accept.setContent(proposal.getContent()); 
+                                System.out.println("4. "+myAgent.getLocalName()+": accepted proposal "+proposal.getContent() + " for "+ proposal.getConversationId());
+                            }             
+                        }
+
+                        @Override
+                        protected void handleInform(ACLMessage inform) {
+                            System.out.println("8. "+inform.getSender().getName()+": successfully performed "+inform.getConversationId());
+                        }
+                    });
+                }
+            }       
+                } catch (Exception e) {
+                    agent.errorLog("Incorrect content: " + e.toString());
                 }
             }
-        } catch (Exception e) {
-            agent.errorLog("Incorrect content: " + e.toString());
-        }
-    }
 
     /**
      * Handle NOT-UNDERSTOOD messages
