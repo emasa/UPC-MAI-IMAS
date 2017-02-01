@@ -14,7 +14,7 @@ import java.util.Random;
  * @author pabloreynoso
  */
 public class HarvestersPathFinder {
-    /*
+    
     
     //Harvesters positions list of coordinates
     private final ArrayList<Coordinate> harvestersPositions;
@@ -110,5 +110,5 @@ public class HarvestersPathFinder {
         
     
     }        
-    */
+    
 }

@@ -29,12 +29,17 @@ import java.util.logging.Level;
 import java.util.logging.Logger;
 import java.util.ArrayList;
 import static cat.urv.imas.agent.ImasAgent.OWNER;
+import cat.urv.imas.behaviour.harvestercoordinator.PathFinderBehaviour;
+import cat.urv.imas.map.StreetCell;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.ContractNetResponder;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
 import jade.domain.FIPAAgentManagement.RefuseException;
 import jade.domain.FIPAAgentManagement.FailureException;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 /**
  *
  * @author Daniel, Dario, Pablo, Angel y Emanuel
@@ -45,6 +50,67 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
      */
 
     private GameSettings game = null;
+    
+    private Map<AID,SettableBuildingCell> harvesterGarbageBuilding = new HashMap<>();
+
+       
+    public Map<AID, SettableBuildingCell> getHarvesterGarbageBuilding() {
+        return harvesterGarbageBuilding;
+    }
+
+    public void setHarvesterGarbageBuilding(Map<AID, SettableBuildingCell> harvesterGarbageBuilding) {
+        this.harvesterGarbageBuilding = harvesterGarbageBuilding;
+    }
+    protected Map<AID, List<StreetCell>> harvesterGarbagePaths = new HashMap<>();
+    protected Map<AID, List<StreetCell>> harvesterRecyclePaths = new HashMap<>();
+    
+    protected List<AID> AIDList = new ArrayList();
+
+    public List<AID> getAIDList() {
+        return AIDList;
+    }
+
+    public void setAIDList(List<AID> AIDList) {
+        this.AIDList = AIDList;
+    }
+    
+    public Map<AID, List<StreetCell>> getHarvesterGarbagePaths() {
+        return harvesterGarbagePaths;
+    }
+
+    public void setHarvesterGarbagePaths(Map<AID, List<StreetCell>> harvesterGarbagePaths) {
+        this.harvesterGarbagePaths = harvesterGarbagePaths;
+    }
+
+    public Map<AID, List<StreetCell>> getHarvesterRecyclePaths() {
+        return harvesterRecyclePaths;
+    }
+
+    public void setHarvesterRecyclePaths(Map<AID, List<StreetCell>> harvesterRecyclePaths) {
+        this.harvesterRecyclePaths = harvesterRecyclePaths;
+    }
+    
+    
+    
+    private PathFinderBehaviour pfb = new PathFinderBehaviour();
+    
+    private double[][] distances;
+
+    public double[][] getDistances() {
+        return distances;
+    }
+
+    public void setDistances(double[][] distances) {
+        this.distances = distances;
+    }
+
+    public PathFinderBehaviour getPfb() {
+        return pfb;
+    }
+
+    public void setPfb(PathFinderBehaviour pfb) {
+        this.pfb = pfb;
+    }
 
     private int CoalitionNumber = 1;
 
@@ -152,6 +218,9 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         addBehaviour(new SearchHarvesterBehaviour(this));
         addBehaviour(new ReceiveInfoBehaviour(this));
         addBehaviour(new CoalitionBehaviour(this));
+        addBehaviour(new StartGraphBehaviour(this));
+        addBehaviour(new CheckEmptyBuildingBehaviour(this));
+                
 
         
         /* ********************************************************************/    
@@ -235,6 +304,10 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
     
     
     //INICIO DARIO
+    
+    
+    
+    
     
     
     private class ReceiveInfoBehaviour extends CyclicBehaviour {
@@ -335,10 +408,12 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
                 DFAgentDescription[] results = DFService.search(HarvesterCoordinatorAgent.this, template, sc);
                 
                 if (results.length > 0) {
+                    
                     System.out.println("Agent "+getLocalName()+" found the following services:");
                     for (int i = 0; i < results.length; ++i) {
   			DFAgentDescription dfd = results[i];
   			AID provider = dfd.getName();
+                        agent.getAIDList().add(provider);
                         System.out.println("provider----> "+provider.toString());
                         Iterator it = dfd.getAllServices();
                         while (it.hasNext()) {
@@ -349,8 +424,14 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
                         }
                     }
                     //Add element to agentStatusList(one element per Harvester)
+                    //Add element to harvesterGarbagePaths and harvesterRecyclePaths
+                    int i = 0;
                     for (ServiceDescription e : agent.ServiceDescriptionList) {
                         agent.AgentStatus.add(0);
+                        List<StreetCell> emptyList = new ArrayList<>();
+                        agent.harvesterGarbagePaths.put(agent.getAIDList().get(i), emptyList);
+                        agent.harvesterRecyclePaths.put(agent.getAIDList().get(i), emptyList);
+                        i++;
                     }
                 }
                 
@@ -367,7 +448,72 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
     
          
     }
-}    
+    
+    
+    
+    private class StartGraphBehaviour extends OneShotBehaviour{
+
+        public StartGraphBehaviour(HarvesterCoordinatorAgent agent) {
+            super(agent);
+        }
+        
+        @Override
+        public void action() {
+            //Create distances matrix
+            HarvesterCoordinatorAgent agent = (HarvesterCoordinatorAgent)this.getAgent();
             
+            agent.getPfb().initGraph();
+            agent.getPfb().buildGraphByMap();
+            agent.setDistances(agent.getPfb().floydWarshall());
+            
+            agent.setDistances(agent.pfb.getDistances());
+            /*
+            for (int i=0;i<agent.getDistances().length;i++){
+                for (int j=0;j<agent.getDistances()[0].length;j++){
+                    System.out.println("Distance Graph created." + agent.getDistances()[i][j]);
+                
+                }
+            }
+            */      
+        }
+    }
+    
+    private class CheckEmptyBuildingBehaviour extends CyclicBehaviour{
+
+        public CheckEmptyBuildingBehaviour(HarvesterCoordinatorAgent agent) {
+            super(agent);
+        }
+        @Override
+        public void action() {
+            HarvesterCoordinatorAgent agent = (HarvesterCoordinatorAgent)this.getAgent();
+            
+            //Check if Building is empty and update AgentStatus
+            for(int i=0;i<agent.getAgentStatus().size();i++){
+                if(agent.getAgentStatus().get(i) > 0){
+                    
+                    SettableBuildingCell building = agent.getHarvesterGarbageBuilding().get(agent.getAIDList().get(i));
+                    //If building empty means harvester took the trash to rc.
+                    if(building.detectGarbage().isEmpty()){
+                        //Remove agent from coalition
+                        System.out.println("Removing agent "+agent.getAID().getLocalName()+" from coalition "+agent.getAgentStatus().get(i));
+                        agent.getAgentStatus().set(i, 0);
+                    }
+                
+                }
+            }
+        
+        
+        
+        }
+
+    }
+    
+    
+    
+}    
+     
+
+
+
     
 //FIN DARIO

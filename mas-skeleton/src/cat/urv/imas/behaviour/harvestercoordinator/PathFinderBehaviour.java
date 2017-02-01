@@ -4,6 +4,7 @@ package cat.urv.imas.behaviour.harvestercoordinator;
 import cat.urv.imas.agent.HarvesterCoordinatorAgent;
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.CellType;
+import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.GameSettings;
 import cat.urv.imas.onthology.Coordinate;
 import cat.urv.imas.onthology.InitialGameSettings;
@@ -20,7 +21,9 @@ import java.util.List;
 
 
 public class PathFinderBehaviour {
-    /*
+    
+    
+    
     //Harvester coordinates (x,y)
     private final int [] haversterCoord;
     
@@ -34,25 +37,88 @@ public class PathFinderBehaviour {
     private final double[][] graph;
     private final int[][] next;
     private double[][] distances;
+
+    public double[][] getDistances() {
+        return distances;
+    }
+
+    public void setDistances(double[][] distances) {
+        this.distances = distances;
+    }
     
     //Columns and Rows of graph, next and distance
     private int rows = 0;
     private int cols = 0;
+
+    public int getRows() {
+        return rows;
+    }
+
+    public void setRows(int rows) {
+        this.rows = rows;
+    }
+
+    public int getCols() {
+        return cols;
+    }
+
+    public void setCols(int cols) {
+        this.cols = cols;
+    }
     
     private final int invalidFlag = -1;
     
     //Optimal Path (List of positions)
-    private ArrayList<Coordinate> harvesterOptimalPathPositions;
+    protected List<StreetCell> harvesterOptimalPathPositions = new ArrayList<>();
+
+    public List<StreetCell> getHarvesterOptimalPathPositions1() {
+        return harvesterOptimalPathPositions;
+    }
+
+    public void setHarvesterOptimalPathPositions1(List<StreetCell> harvesterOptimalPathPositions1) {
+        this.harvesterOptimalPathPositions = harvesterOptimalPathPositions1;
+    }
     
+    public void addharvesterOptimalPathPositions(StreetCell celda){
+        this.harvesterOptimalPathPositions.add(celda);
+    }
     //NegativeCycle
     private boolean negativeCycle;
+    
+       
+    public PathFinderBehaviour(){
+        //Initializing the map
+        GameSettings game = InitialGameSettings.load("game.settings");
+        this.cell_map = game.getMap();
+        
+     
+        //Rows & Cols city_map
+        this.cols = this.cell_map[0].length;
+        this.rows = this.cell_map.length;
+     
+        //Init Harvester & Garbage Positions
+        this.haversterCoord = null;
+        this.garbageCoord = null;
+        
+        //Initialize graph algorithm matrixes
+        this.graph = new double [rows*cols][rows*cols];
+        this.next = new int [rows*cols][rows*cols];
+        this.distances = new double [rows*cols][rows*cols];
+        
+        this.harvesterOptimalPathPositions = null;
+    
+    
+    }
     
     //Constructor
     public PathFinderBehaviour(int [] harvestersCoord, int [] garbageCoord){
         
+        
+        
         //Initializing the map
         HarvesterCoordinatorAgent hca = new HarvesterCoordinatorAgent();
-        this.cell_map = hca.getMap();
+        GameSettings game = InitialGameSettings.load("game.settings");
+        this.cell_map = game.getMap();
         
         //Init Harvester & Garbage Positions
         this.haversterCoord = harvestersCoord;
@@ -77,8 +143,9 @@ public class PathFinderBehaviour {
         for(int h=0; h<this.harvesterOptimalPathPositions.size(); h++){
             
             System.out.print("Position "+(h+1)+": (");
-            System.out.print(this.harvesterOptimalPathPositions.get(h).getX()+",");
-            System.out.print(this.harvesterOptimalPathPositions.get(h).getY()+")");
+            
+            System.out.print(this.harvesterOptimalPathPositions.get(h).getRow()+",");
+            System.out.print(this.harvesterOptimalPathPositions.get(h).getCol()+")");
             System.out.print("\n");
         
         }
@@ -86,7 +153,7 @@ public class PathFinderBehaviour {
     }
     
     //Return the harvester optimal path as list of coordinates
-    public ArrayList<Coordinate> getHarvesterOptimalPath(){
+    public List<StreetCell> getHarvesterOptimalPath(){
         return this.harvesterOptimalPathPositions;
     }
     //Initializing Graph
@@ -110,7 +177,7 @@ public class PathFinderBehaviour {
         
         for(int i=0; i<this.rows; i++) {
             for(int j=0; j<this.cols; j++) {
-                
+                //System.out.println(this.cell_map[i][j].getCellType());
                 if(this.cell_map[i][j].getCellType() == CellType.STREET){
                     
                     if(i-1>-1 && this.cell_map[i-1][j].getCellType() == CellType.STREET) addEdge(i*this.cols+j,(i-1)*this.cols+j,1.0);
@@ -140,7 +207,7 @@ public class PathFinderBehaviour {
     }
 
     //FloydWarshall - Shortest path between two update distances matrix
-    private void floydWarshall() {
+    public double[][] floydWarshall() {
         
         int n = this.graph.length;
         this.distances = Arrays.copyOf(this.graph, n);
@@ -161,6 +228,7 @@ public class PathFinderBehaviour {
                 this.negativeCycle = true;
             }
         }
+        return this.distances;
         
     }
 
@@ -195,85 +263,90 @@ public class PathFinderBehaviour {
         
     }
     
-    public void OptimalPathToCartesianCoords(List<Integer> optimalPath) {
+    public List<StreetCell> OptimalPathToCartesianCoords(List<Integer> optimalPath) {
         
-        this.harvesterOptimalPathPositions = new ArrayList<Coordinate>();
+        List<StreetCell> lista = new ArrayList<>();
+        System.out.println("OptimalPath Size: "+optimalPath.size());
         for(int i=0; i<optimalPath.size(); i++){
-            Coordinate c_i = new Coordinate();
+            
             int x = optimalPath.get(i) / this.cols;
             double y = Math.round(((1.0 * optimalPath.get(i) / this.cols) - x)* this.cols);
-            c_i.setXY(x,(int)y);
-            this.harvesterOptimalPathPositions.add(c_i);
-        }
 
+            lista.add(new StreetCell(x,(int)y));
+            
+            
+            
+        }
+        return lista;
     }
-    //Display garbages positions list
-    public static void main(String[]args){
-        
-        //Considering map matrix dimensions max (indexes) as (19,24) 
-        //NOTE: (18,23) farest poisiton available based on map config
-        int [] hCoord = {18,24}; 
-        int [] gCoord = {7,2};
-        
-        PathFinderBehaviour PFB = new PathFinderBehaviour(hCoord,gCoord);
-        
-        int harvesterPos = PFB.haversterCoord[0]*PFB.cols + PFB.haversterCoord[1];
-        int garbagePos = PFB.garbageCoord[0]*PFB.cols + PFB.garbageCoord[1];
-        
-        System.out.println();
-        System.out.println("cell_map ["+PFB.rows+"x"+PFB.cols+"]");
-        System.out.println("harvesterCoord = ("+PFB.haversterCoord[0]+","+PFB.haversterCoord[1]+")");
-        System.out.println("garbageCoord = ("+PFB.garbageCoord[0]+","+PFB.garbageCoord[1]+")");
-        System.out.println("Considering Adjacencies matrix dimensions : "+PFB.graph.length+"x"+PFB.graph[0].length);
-        System.out.println("harvesterPos = "+harvesterPos);
-        System.out.println("garbagePos = "+garbagePos);
-        System.out.println();
-    */    
-        /*
-        for(int i=0; i<PFB.rows; i++){
-            for(int j=0; j<PFB.cols; j++){
-                System.out.print(PFB.cell_map[i][j].getCellType()+" ");
-            }
-            System.out.println();
-        }
-        */
-    /*    
-        List<Integer> OptimalPath = null;
-        
-        PFB.initGraph();
-        PFB.buildGraphByMap();
-        PFB.floydWarshall();
-        
-        boolean validHarvesterPos = PFB.cell_map[PFB.haversterCoord[0]][PFB.haversterCoord[1]].getCellType() == CellType.STREET;
-        boolean validGarbagePos = PFB.cell_map[PFB.garbageCoord[0]][PFB.garbageCoord[1]].getCellType() == CellType.STREET;
-
-        if(!validHarvesterPos || !validGarbagePos){
-            
-            if(!validHarvesterPos) System.out.println("Harvester position must be in a street cell");
-            if(!validGarbagePos) System.out.println("Garbage position must be in a street cell");
-            System.exit(1);
-        }
-            
-        OptimalPath = PFB.getOptimalPath(harvesterPos,garbagePos);
-
-        //If an optimal path exists
-        if(OptimalPath != null){
-
-            PFB.OptimalPathToCartesianCoords(OptimalPath);
-            PFB.getHarvesterOptimalPath();
-            PFB.printHarvesterOptimalPath();
-
-        }else{
-
-            System.out.println("There is not a path between harvester("+PFB.haversterCoord[0]+","+PFB.haversterCoord[1]+")");
-            System.out.print(" and garbage("+PFB.garbageCoord[0]+","+PFB.garbageCoord[1]+")");
-
-        }
-           
-        
-        
-        
-    } 
     
-    */
+//    Display garbages positions list
+//    public static void main(String[]args){
+//        
+//        Considering map matrix dimensions max (indexes) as (19,24) 
+//        NOTE: (18,23) farest poisiton available based on map config
+//        int [] hCoord = {18,24}; 
+//        int [] gCoord = {7,2};
+//        
+//        PathFinderBehaviour PFB = new PathFinderBehaviour(hCoord,gCoord);
+//        
+//        int harvesterPos = PFB.haversterCoord[0]*PFB.cols + PFB.haversterCoord[1];
+//        int garbagePos = PFB.garbageCoord[0]*PFB.cols + PFB.garbageCoord[1];
+//        
+//        System.out.println();
+//        System.out.println("cell_map ["+PFB.rows+"x"+PFB.cols+"]");
+//        System.out.println("harvesterCoord = ("+PFB.haversterCoord[0]+","+PFB.haversterCoord[1]+")");
+//        System.out.println("garbageCoord = ("+PFB.garbageCoord[0]+","+PFB.garbageCoord[1]+")");
+//        System.out.println("Considering Adjacencies matrix dimensions : "+PFB.graph.length+"x"+PFB.graph[0].length);
+//        System.out.println("harvesterPos = "+harvesterPos);
+//        System.out.println("garbagePos = "+garbagePos);
+//        System.out.println();
+//        
+//        /*
+//        for(int i=0; i<PFB.rows; i++){
+//            for(int j=0; j<PFB.cols; j++){
+//                System.out.print(PFB.cell_map[i][j].getCellType()+" ");
+//            }
+//            System.out.println();
+//        }
+//        */
+//        
+//        List<Integer> OptimalPath = null;
+//        
+//        PFB.initGraph();
+//        PFB.buildGraphByMap();
+//        PFB.floydWarshall();
+//        
+//        boolean validHarvesterPos = PFB.cell_map[PFB.haversterCoord[0]][PFB.haversterCoord[1]].getCellType() == CellType.STREET;
+//        boolean validGarbagePos = PFB.cell_map[PFB.garbageCoord[0]][PFB.garbageCoord[1]].getCellType() == CellType.STREET;
+//
+//        if(!validHarvesterPos || !validGarbagePos){
+//            
+//            if(!validHarvesterPos) System.out.println("Harvester position must be in a street cell");
+//            if(!validGarbagePos) System.out.println("Garbage position must be in a street cell");
+//            System.exit(1);
+//        }
+//            
+//        OptimalPath = PFB.getOptimalPath(harvesterPos,garbagePos);
+//
+//        If an optimal path exists
+//        if(OptimalPath != null){
+//
+//            PFB.OptimalPathToCartesianCoords(OptimalPath);
+//            PFB.getHarvesterOptimalPath();
+//            PFB.printHarvesterOptimalPath();
+//
+//        }else{
+//
+//            System.out.println("There is not a path between harvester("+PFB.haversterCoord[0]+","+PFB.haversterCoord[1]+")");
+//            System.out.print(" and garbage("+PFB.garbageCoord[0]+","+PFB.garbageCoord[1]+")");
+//
+//        }
+//           
+//        
+//        
+//        
+//    } 
+//    
+    
 }

@@ -134,6 +134,19 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                         int gX = garbage.getCol();
                         int gY = garbage.getRow();
 
+                        //Get new coordinate por garbage (adjacent to building)
+                        if (agent.getGame().getMap()[gX + 1][gY].getCellType().equals(CellType.STREET)) {
+                            gX++;
+                        } else if (agent.getGame().getMap()[gX - 1][gY].getCellType().equals(CellType.STREET)) {
+                            gX--;
+                        } else if (agent.getGame().getMap()[gX][gY + 1].getCellType().equals(CellType.STREET)) {
+                            gY++;
+                        } else if (agent.getGame().getMap()[gX - 1][gY - 1].getCellType().equals(CellType.STREET)) {
+                            gY--;
+                        }
+
+                        
+                        
                         //Define index to access recycling center prices
                         int j = 0;
                         if (garbageType.getShortString().equals(GarbageType.PLASTIC.getShortString())) {
@@ -146,30 +159,55 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                             j = 2;
                         }
 
+                        
+                        
                         //Now for each element in permutations calculate Coalition Cost
                         double BestCoalitionCost = Double.NEGATIVE_INFINITY;
                         int BestRecyclingCenter = 10;
                         
+                        //Agent positions
+                        int aX = 0;
+                        int aY = 0;
+                        int i = 0;
+                        
+                        int WrcX = 0;
+                        int WrcY = 0;
+                        int WgX = 0;
+                        int WgY = 0;
                         String winnerPermutation = null;
                         for (String p : permutations) {
                             String[] ais = p.split("\\s+");
 
                             //For each recycling center
                             double CoalitionCost = 0;
-                            int i = 0;
+                            i = 0;
+                            System.out.println("Size of recycling Center: "+agent.getRecyclingCenter().size());
                             for (Cell recyclingCenter : agent.getRecyclingCenter()) {
 
                                 int rcX = recyclingCenter.getRow();
                                 int rcY = recyclingCenter.getCol();
                                 int price = agent.getGame().getRecyclingCenterPrices()[i][j];
+                        
+                                //Get new coordinate por garbage (adjacent to building)
+                                if (agent.getGame().getMap()[rcX + 1][rcY].getCellType().equals(CellType.STREET)) {
+                                    rcX++;
+                                } else if (agent.getGame().getMap()[rcX - 1][rcY].getCellType().equals(CellType.STREET)) {
+                                    rcX--;
+                                } else if (agent.getGame().getMap()[rcX][rcY + 1].getCellType().equals(CellType.STREET)) {
+                                    rcY++;
+                                } else if (agent.getGame().getMap()[rcX - 1][rcY - 1].getCellType().equals(CellType.STREET)) {
+                                    rcY--;
+                                }
+
+
                                 //For each agent
                                 for (String ai : ais) {
                                     //Get agent current position
                                     String agentName = agent.getServiceDescriptionList().get(Integer.parseInt(ai)).getName();
                                     //System.out.println("agentName ::: "+agentName + " for coalition calculation.");
                                 
-                                    int aX = 0;
-                                    int aY = 0;
+                                    aX = 1;
+                                    aY = 18;
                                     /*
                                     List<Cell> harvestersCells = (ArrayList<Cell>) agent.getGame().getAgentList().get(AgentType.HARVESTER);
                                     for (int ii = 0; ii < harvestersCells.size(); ii++) {
@@ -184,30 +222,44 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                                     }                                  
                                     */
                                     
+                                    
+                                    
+                                    
                                     //CoalitonCost update 
-                                    CoalitionCost -= distance(aX, aY, gX, gY);
+                                    CoalitionCost -= (double) Math.round(agent.getPfb().getDistanceBtwPoints(aX, aY, gX, gY)/ais.length);
+                                    //System.out.println("Distance between points: --->> "+agent.getPfb().getDistanceBtwPoints(aX, aY, gX, gY));
                                 }
                         
-                                String[] aI = p.split("\\s+");
-                                int harvestersQty = aI.length;
+                                
+                                int harvestersQty = ais.length;
                                 if(garbageQty>harvestersQty*HarvesterCapacity){
-                                    CoalitionCost -= (double) 2* Math.ceil((garbageQty-harvestersQty*HarvesterCapacity) / HarvesterCapacity) * distance(gX, gY, rcX, rcY);
-                                    CoalitionCost -= (double) harvestersQty * distance(gX, gY, rcX, rcY);
+                                    CoalitionCost -= (double) 2* Math.ceil((garbageQty-harvestersQty*HarvesterCapacity) / HarvesterCapacity) * agent.getPfb().getDistanceBtwPoints(gX, gY, rcX, rcY);
+                                    CoalitionCost -= (double) agent.getPfb().getDistanceBtwPoints(gX, gY, rcX, rcY);
                                 
                                 }else{
-                                    CoalitionCost -= (double) harvestersQty * distance(gX, gY, rcX, rcY);
+                                    CoalitionCost -= (double) harvestersQty * agent.getPfb().getDistanceBtwPoints(gX, gY, rcX, rcY);
                                 
                                 }
                                 CoalitionCost += (double) garbageQty * (double) price;
+                                System.out.println("Coalition Cost: --->> "+CoalitionCost);
                                 
+                                if (CoalitionCost > BestCoalitionCost) {
+                                    winnerPermutation = p;
+                                    BestRecyclingCenter = i;
+                                    WrcX = rcX;
+                                    WrcY = rcY;
+                                    WgX = gX;
+                                    WgY = gY;
+                                }
+
                                 
                                 i++;
+                            
+                                
+                            
                             }
 
-                            if (CoalitionCost > BestCoalitionCost) {
-                                winnerPermutation = p;
-                                BestRecyclingCenter = i;
-                            }
+                            
                         }
 
                     
@@ -217,8 +269,43 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                         //Set AgentStatus with Coalition Number
                         String[] wi = winnerPermutation.split("\\s+");
                         for (String s : wi) {
-                            System.out.println("Agent "+agent.getServiceDescriptionList().get(Integer.parseInt(s)).getName() + " of type "+agent.getServiceDescriptionList().get(Integer.parseInt(s)).getType());
-                            agent.getAgentStatus().set(Integer.parseInt(s), CoalitionNumber);
+                            
+                            int agentI = Integer.parseInt(s);
+                            System.out.println("Agent "+agent.getServiceDescriptionList().get(agentI).getName() + " of type "+agent.getServiceDescriptionList().get(agentI).getType());
+                            agent.getAgentStatus().set(agentI, CoalitionNumber);
+                            
+                            int[] origin = {aX,aY};
+                            int[] destination = {WgX,WgY};
+                            
+                            int originNode = origin[0]*agent.getPfb().getCols() + origin[1];
+                            int destinationNode = destination[0]*agent.getPfb().getCols() + destination[1];
+                            List<Integer> h2g = agent.getPfb().getOptimalPath(originNode, destinationNode);
+                            System.out.print("Optimal path from agent to garbage: "+h2g);
+                            
+                            origin[0] = WgX;
+                            origin[1] = WgY;
+                            destination[0] = WrcX;
+                            destination[1] = WrcY;
+                            originNode = origin[0]*agent.getPfb().getCols() + origin[1];
+                            destinationNode = destination[0]*agent.getPfb().getCols() + destination[1];
+                            List<Integer> g2r = agent.getPfb().getOptimalPath(originNode, destinationNode);
+                            System.out.println("\n----------------------------------------\n");
+                            System.out.print("Optimal path from garbage to Recycling Center: "+g2r);
+                            agent.getHarvesterRecyclePaths().put(agent.getAIDList().get(agentI), agent.getPfb().OptimalPathToCartesianCoords(agent.getPfb().getOptimalPath(originNode, destinationNode)));
+                            
+                            
+                            if(h2g != null && g2r != null){
+                                agent.getHarvesterGarbagePaths().put(agent.getAIDList().get(agentI), agent.getPfb().OptimalPathToCartesianCoords(h2g));
+                                agent.getHarvesterRecyclePaths().put(agent.getAIDList().get(agentI), agent.getPfb().OptimalPathToCartesianCoords(agent.getPfb().getOptimalPath(originNode, destinationNode)));
+                                agent.getHarvesterGarbageBuilding().put(agent.getAIDList().get(agentI), garbage);
+                            }
+                            System.out.println(agent.getAIDList().get(agentI));
+                            System.out.println("Optimal Path H2G : "+agent.getHarvesterGarbagePaths().get(agent.getAIDList().get(agentI)));
+                            System.out.println("Optimal Path G2R : "+agent.getHarvesterRecyclePaths().get(agent.getAIDList().get(agentI)));
+                            System.out.println("Garbage in Building : "+agent.getHarvesterGarbageBuilding().get(agent.getAIDList().get(agentI)));
+                            
+                            
+                            
                         }
                         
                         for (int e : agent.getAgentStatus()){
