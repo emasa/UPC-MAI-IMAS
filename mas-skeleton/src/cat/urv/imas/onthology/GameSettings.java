@@ -18,9 +18,12 @@
 package cat.urv.imas.onthology;
 
 import cat.urv.imas.agent.AgentType;
+import cat.urv.imas.map.BuildingCell;
 import cat.urv.imas.map.Cell;
+import cat.urv.imas.map.CellType;
 import cat.urv.imas.map.StreetCell;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import javax.xml.bind.annotation.XmlElement;
@@ -95,6 +98,7 @@ public class GameSettings implements java.io.Serializable {
      * Title to set to the GUI.
      */
     protected String title = "Demo title";
+    private int currentSimulationSteps;
     
 
     public float getSeed() {
@@ -145,6 +149,15 @@ public class GameSettings implements java.io.Serializable {
         this.simulationSteps = simulationSteps;
     }
 
+    public int getCurrentSimulationSteps() {
+        return currentSimulationSteps;
+    }
+
+    @XmlElement(required = true)
+    public void setCurrentSimulationSteps(int simulationSteps) {
+        this.currentSimulationSteps = simulationSteps;
+    }    
+    
     public String getTitle() {
         return title;
     }
@@ -204,11 +217,34 @@ public class GameSettings implements java.io.Serializable {
         return map;
     }
     
-    public Cell[] detectBuildingsWithGarbage(int row, int col) {
-        //TODO: find all surrounding cells to (row,col) that are
+    public ArrayList<BuildingCell> detectBuildingsWithGarbage(int row, int col) {
+        //      find all surrounding cells to (row,col) that are
         //      buildings and have garbage on it.
-        //      Use: BuildingCell.detectGarbage() to do so.
-        return null;
+        //      Use: BuildingCell.detectGarbage() to do so.        
+        int rows = map.length, cols = map[0].length;
+        ArrayList<BuildingCell> buildingsWithGarbage = new ArrayList<>();
+
+        for (int dy = -1 ; dy <= 1 ; ++dy ) {
+            for (int dx = -1 ; dx <= 1 ; ++dx ) {
+                int y = row + dy, x = col + dx;
+                // check bounderies and filter surrounding cells containing a building                
+                if (0 <= y && y < rows && 0 <= x && x < cols && 
+                    row != y && col != x &&
+                    this.get(y, x).getCellType() == CellType.BUILDING ) {
+                    
+                    BuildingCell building = (BuildingCell) this.get(y, x);
+                    // list garbage that was previously undetected (building 
+                    // declared as empty) but after detecting now it is found
+                    // TODO: no estoy seguro si esta deberia ser la condicion
+                    if (building.getGarbage().isEmpty() &&
+                        !building.detectGarbage().isEmpty() ) {
+                        buildingsWithGarbage.add(building);
+                    }
+                }
+            }
+        }
+
+        return buildingsWithGarbage;
     }
     
     /**
@@ -230,6 +266,30 @@ public class GameSettings implements java.io.Serializable {
         this.agentList = agentList;
     }
     
+    public void updateAgentList() {
+        Map<AgentType, List<Cell>> newAgentList = new HashMap<>();
+        newAgentList.put(AgentType.HARVESTER, new ArrayList<Cell>());
+        newAgentList.put(AgentType.SCOUT, new ArrayList<Cell>());
+        
+        int rows = map.length, cols = map[0].length;
+        for (int y = 0 ; y < rows ; ++y) {
+            for (int x = 0 ; x < cols ; ++x) {
+                Cell cell = this.get(y, x);
+                if (cell.getCellType() == CellType.STREET)
+                {
+                    StreetCell street = (StreetCell) cell;
+                    if (street.isThereAnAgent()) {
+                        newAgentList.get(street.getAgent().getType()).add(cell);
+                        System.out.println("Update: " + cell);
+                    }
+                }
+            }
+        }
+        
+        setAgentList(newAgentList);
+    }
+    
+    @Override
     public String toString() {
         //TODO: show a human readable summary of the game settings.
         return "Game settings";

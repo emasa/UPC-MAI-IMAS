@@ -7,6 +7,7 @@ package cat.urv.imas.agent;
 
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.StreetCell;
+import cat.urv.imas.onthology.GameSettings;
 import cat.urv.imas.onthology.GarbageType;
 import cat.urv.imas.onthology.MessageContent;
 import jade.domain.DFService;
@@ -24,6 +25,7 @@ public class HarvesterAgent extends ImasAgent{
 
     private StreetCell position;
     private GarbageType[] garbageTypes;
+    private GameSettings game;
     
     /**
      * Builds the coordinator agent.
@@ -93,6 +95,10 @@ public class HarvesterAgent extends ImasAgent{
             doDelete();
         }
 
+    }
+
+    public GameSettings getGame() {
+        return game;
     }
 
 }

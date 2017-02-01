@@ -17,12 +17,17 @@
  */
 package cat.urv.imas.agent;
 
+import cat.urv.imas.behaviour.system.NewGarbageBehaviour;
 import cat.urv.imas.onthology.InitialGameSettings;
 import cat.urv.imas.onthology.GameSettings;
 import cat.urv.imas.gui.GraphicInterface;
 import cat.urv.imas.behaviour.system.RequestResponseBehaviour;
+import cat.urv.imas.behaviour.system.SendNewStep;
 import cat.urv.imas.map.Cell;
+import cat.urv.imas.onthology.MessageContent;
+import cat.urv.imas.onthology.MessageWrapper;
 import jade.core.*;
+import jade.core.behaviours.SequentialBehaviour;
 import jade.domain.*;
 import jade.domain.FIPAAgentManagement.*;
 import jade.domain.FIPANames.InteractionProtocol;
@@ -31,6 +36,7 @@ import jade.wrapper.AgentController;
 import jade.wrapper.ContainerController;
 import java.util.List;
 import java.util.Map;
+import java.util.Random;
 
 /**
  * System agent that controls the GUI and loads initial configuration settings.
@@ -53,6 +59,7 @@ public class SystemAgent extends ImasAgent {
      * round.
      */
     private AID coordinatorAgent;
+    private Random random;
 
     /**
      * Builds the System agent.
@@ -99,6 +106,15 @@ public class SystemAgent extends ImasAgent {
     }
 
     /**
+     * Gets the random object instanciated with seed from the game settings.
+     *
+     * @return random.
+     */    
+    public Random getRandom(){
+        return this.random;
+    }
+    
+    /**
      * Agent setup method - called when it first come on-line. Configuration of
      * language to use, ontology and initialization of behaviours.
      */
@@ -127,31 +143,47 @@ public class SystemAgent extends ImasAgent {
 
         // 2. Load game settings.
         this.game = InitialGameSettings.load("game.settings");
+        this.game.setCurrentSimulationSteps(1);
         log("Initial configuration settings loaded");
+        
+        // Instantiate random object with seed from the game settings
+        this.random = new Random((long) this.game.getSeed());
+
+        // this behaviour has to be initiated before other agents
+        MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+        this.addBehaviour(new RequestResponseBehaviour(this, mt));
 
         ContainerController cc = this.getContainerController();
 
         // 3. Load GUI
         try {
-            AgentController agentController = cc.createNewAgent("Coordinator Agent", CoordinatorAgent.class.getName(), null);
+            AgentController agentController = cc.createNewAgent("Coordinator Agent", CoordinatorAgent.class.getName(), new Object[] {game});
             agentController.start();
             agentController = cc.createNewAgent("Scout Coordinator Agent", ScoutCoordinatorAgent.class.getName(), null);
+            
+            // search CoordinatorAgent
+            // searchAgent is a blocking method, so we will obtain always a correct AID        
+            ServiceDescription searchCriterion = new ServiceDescription();
+            searchCriterion.setType(AgentType.COORDINATOR.toString());
+            this.coordinatorAgent = UtilsAgents.searchAgent(this, searchCriterion);
+            
+            agentController = cc.createNewAgent("Harvester Coordinator Agent", HarvesterCoordinatorAgent.class.getName(), new Object[] {game});
             agentController.start();
-            agentController = cc.createNewAgent("Harvester Coordinator Agent", HarvesterCoordinatorAgent.class.getName(), null);
+            agentController = cc.createNewAgent("Scout Coordinator Agent", ScoutCoordinatorAgent.class.getName(), new Object[] {game} );
             agentController.start();
             for (Map.Entry<AgentType,List<Cell>> entry : game.getAgentList().entrySet()) {
                 String currentKey = entry.getKey().getShortString();
                 int i = 1;
                 if (currentKey.equals(AgentType.HARVESTER.getShortString())) {
                     for (Cell cell : entry.getValue()) {
-                        Object[] params = {cell, this.game.getAllowedGarbageTypePerHarvester()[i - 1]};
+                        Object[] params = {cell, this.game.getAllowedGarbageTypePerHarvester()[i - 1], game};
                         agentController = cc.createNewAgent(entry.getKey().getShortString() + i, HarvesterAgent.class.getName(), params);
                         agentController.start();
                         i++;
                     }
                 } else if (currentKey.equals(AgentType.SCOUT.getShortString())) {
                     for (Cell cell : entry.getValue()) {
-                        Object[] params = {cell};
+                        Object[] params = {cell, game};
                         agentController = cc.createNewAgent(entry.getKey().getShortString() + i, ScoutAgent.class.getName(), params);
                         agentController.start();
                         i++;
@@ -165,6 +197,13 @@ public class SystemAgent extends ImasAgent {
             this.gui = new GraphicInterface(game);
             gui.setVisible(true);
             log("GUI loaded");
+
+        // add initial behaviours            
+        SequentialBehaviour init = new SequentialBehaviour(this);
+        init.addSubBehaviour(new NewGarbageBehaviour(this, 1.0f));
+        init.addSubBehaviour(new SendNewStep(this, this.createNewStep()));
+        this.addBehaviour(init);
+            
         } catch (Exception e) {
             e.printStackTrace();
         }
@@ -190,10 +229,35 @@ public class SystemAgent extends ImasAgent {
     
     
     
+        } 
     }
 
     public void updateGUI() {
         this.gui.updateGame();
     }
 
+    public void showStats (String stats) {
+        this.gui.showStatistics(stats);
+    }
+    
+    public ACLMessage createNewStep() {
+        ACLMessage newStepRequest = new ACLMessage(ACLMessage.REQUEST);
+        newStepRequest.clearAllReceiver();
+        newStepRequest.addReceiver(this.coordinatorAgent);
+        newStepRequest.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);        
+     
+        try {
+            MessageWrapper wrapper = new MessageWrapper();
+            wrapper.setType(MessageContent.NEW_STEP);
+            newStepRequest.setContentObject(wrapper);
+
+            log("Start simulation step: " + this.game.getCurrentSimulationSteps());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+       
+        return newStepRequest;
+    }    
+    
+    
 }

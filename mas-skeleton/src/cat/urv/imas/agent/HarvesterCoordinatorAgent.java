@@ -45,6 +45,8 @@ import java.util.Map;
  * @author Daniel, Dario, Pablo, Angel y Emanuel
  */
 public class HarvesterCoordinatorAgent extends ImasAgent{
+
+    private GameSettings game;
      /**
      * Builds the coordinator agent.
      */
@@ -211,7 +213,16 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         } catch (FIPAException e) {
             System.err.println(getLocalName() + " registration with DF unsucceeded. Reason: " + e.getMessage());
             doDelete();
-        }        
+        }
+        
+        Object[] args = getArguments();
+        if (args != null && args.length > 0) {
+            this.game = (GameSettings) args[0];
+        } else {
+            // Make the agent terminate immediately
+            doDelete();
+        }
+        
         log("Creatad new Harvester Coordinator: " + getLocalName());
 
         //Behaviours
@@ -285,6 +296,14 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
                 
   		
 	
+    }
+
+    public GameSettings getGame() {
+        return game;
+    }
+
+    public void setGame(GameSettings game) {
+        this.game = game;
     }
   
     private SettableBuildingCell evaluateAction(ACLMessage contract) throws UnreadableException {

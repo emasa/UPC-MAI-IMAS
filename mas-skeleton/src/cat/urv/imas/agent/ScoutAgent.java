@@ -6,11 +6,14 @@
 package cat.urv.imas.agent;
 
 import static cat.urv.imas.agent.ImasAgent.OWNER;
+
 import cat.urv.imas.behaviour.scout.ResponseGarbageBehaviour;
 import cat.urv.imas.map.BuildingCell;
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.StreetCell;
+import cat.urv.imas.onthology.GameSettings;
 import jade.core.AID;
+import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
@@ -18,14 +21,21 @@ import jade.domain.FIPAException;
 import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
+import jade.lang.acl.UnreadableException;
 import java.util.ArrayList;
+
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
  * @author Dario, Angel, Pablo, Emanuel y Daniel
  */
 public class ScoutAgent extends ImasAgent{
-    
+
+    public final static int NORTH = 0, EAST = 1, SOUTH = 2, WEST = 3, CENTER=4, INVALID=5;    
+
+    private int currentDirection;
     private StreetCell position;
     /**
      * The Coordinator agent with which interacts sharing game settings every
@@ -42,14 +52,24 @@ public class ScoutAgent extends ImasAgent{
      * round.
      */
     private ArrayList<BuildingCell> garbageCells;
+    private GameSettings game;
     
      /**
      * Builds the coordinator agent.
      */
     public ScoutAgent() {
         super(AgentType.SCOUT);
+        this.currentDirection = ScoutAgent.CENTER;
     }
 
+    public StreetCell getCurrentPosition() {
+        return position;
+    }
+
+    public void setCurrentPosition(StreetCell position) {
+        this.position = position;
+    }
+    
     @Override
     protected void setup() {
         /* ** Very Important Line (VIL) ***************************************/
@@ -78,17 +98,25 @@ public class ScoutAgent extends ImasAgent{
         if (args != null && args.length > 0) {
             position = (StreetCell) args[0];
             position.getAgent().setAID(getAID());
+            this.game = (GameSettings) args[1];            
             log("At (" + position.getRow() + " , " + position.getCol() + ")");
         } else {
             // Make the agent terminate immediately
             doDelete();
-        
         }
+        
         // add behaviours
         // we wait for the initialization of the game
         MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
-
         this.addBehaviour(new ResponseGarbageBehaviour(this, mt));
+    }
+
+    public GameSettings getGame() {
+        return game;
+    }
+
+    public void setGame(GameSettings game) {
+        this.game = game;
     }
 
     public ArrayList<Cell> getAdjacentCells() {
@@ -114,5 +142,12 @@ public class ScoutAgent extends ImasAgent{
     public void setPosition(StreetCell position) {
         this.position = position;
     }
+        
+    public void setCurrentDirection(int direction) {
+        currentDirection = direction;
+    }
 
+    public int getCurrentDirection() {
+        return currentDirection;
+    }
 }

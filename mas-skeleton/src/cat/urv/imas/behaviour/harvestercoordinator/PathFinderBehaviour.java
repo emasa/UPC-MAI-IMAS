@@ -7,7 +7,6 @@ import cat.urv.imas.map.CellType;
 import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.GameSettings;
 import cat.urv.imas.onthology.Coordinate;
-import cat.urv.imas.onthology.InitialGameSettings;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -119,6 +118,7 @@ public class PathFinderBehaviour {
         HarvesterCoordinatorAgent hca = new HarvesterCoordinatorAgent();
         GameSettings game = InitialGameSettings.load("game.settings");
         this.cell_map = game.getMap();
+        //this.cell_map = hca.getGame().getMap();
         
         //Init Harvester & Garbage Positions
         this.haversterCoord = harvestersCoord;

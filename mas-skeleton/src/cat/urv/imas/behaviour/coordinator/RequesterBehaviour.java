@@ -22,6 +22,7 @@ import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
 import cat.urv.imas.agent.CoordinatorAgent;
+import cat.urv.imas.onthology.MessageWrapper;
 import cat.urv.imas.agent.UtilsAgents;
 import cat.urv.imas.map.BuildingCell;
 import cat.urv.imas.map.SettableBuildingCell;
@@ -79,21 +80,7 @@ public class RequesterBehaviour extends AchieveREInitiator {
         AID senderID = (AID) msg.getSender();
         agent.log("INFORM received from " + senderID.getLocalName());
         try {
-            if(senderID.equals(agent.getSystemAgent())){
-                GameSettings game = (GameSettings) msg.getContentObject();
-                agent.setGame(game);
-                agent.log(game.getShortString());
-                /* ********************************************************************/
-                ACLMessage stepsRequest = new ACLMessage(ACLMessage.REQUEST);
-                stepsRequest.clearAllReceiver();
-                stepsRequest.addReceiver(agent.getScoutCoordinatorAgent());
-                stepsRequest.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);
-                agent.log("Request message to Scout Coordinator.");
-                HashMap<String,GameSettings> content = new HashMap<String, GameSettings>();
-                content.put(MessageContent.GET_SCOUT_STEPS, agent.getGame());
-                stepsRequest.setContentObject(content);
-                agent.addBehaviour(new RequesterBehaviour(agent, stepsRequest));
-            }else if(senderID.equals(agent.getScoutCoordinatorAgent())){
+            if(senderID.equals(agent.getScoutCoordinatorAgent())){
 //                agent.log("venimos del scout, supuestamente acabo el paso.");
 
                 //ADD MANUALLY GARBAGE TO TEST COALITION

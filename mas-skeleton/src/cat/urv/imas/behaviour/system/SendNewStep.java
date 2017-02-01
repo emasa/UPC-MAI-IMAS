@@ -1,3 +1,4 @@
+
 /**
  *  IMAS base code for the practical work.
  *  Copyright (C) 2014 DEIM - URV
@@ -15,14 +16,12 @@
  *  You should have received a copy of the GNU General Public License
  *  along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package cat.urv.imas.behaviour.scoutcoordinator;
+package cat.urv.imas.behaviour.system;
 
-import cat.urv.imas.agent.ScoutCoordinatorAgent;
-import cat.urv.imas.map.BuildingCell;
+import cat.urv.imas.agent.SystemAgent;
 import jade.core.AID;
 import jade.lang.acl.ACLMessage;
 import jade.proto.AchieveREInitiator;
-import java.util.ArrayList;
 
 /**
  * Behaviour for the Scout Coordinator agent to deal with AGREE messages.
@@ -33,12 +32,12 @@ import java.util.ArrayList;
  * NOTE: The List of cell with garbage is processed by another behaviour that 
  * we add after the INFORM has been processed.
  */
-public class RequestGarbageBehaviour extends AchieveREInitiator {
+public class SendNewStep extends AchieveREInitiator {
 
-    public RequestGarbageBehaviour(ScoutCoordinatorAgent agent, ACLMessage requestMsg) {
+    public SendNewStep(SystemAgent agent, ACLMessage requestMsg) {
         super(agent, requestMsg);
         AID elem = (AID)requestMsg.getAllReceiver().next();
-        agent.log("Adjacent cells sent to Scout "+ elem.getLocalName()+".");
+        agent.log("New simulation step sent to "+ elem.getLocalName()+".");
     }
 
     /**
@@ -48,7 +47,7 @@ public class RequestGarbageBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleAgree(ACLMessage msg) {
-        ScoutCoordinatorAgent agent = (ScoutCoordinatorAgent) this.getAgent();
+        SystemAgent agent = (SystemAgent) this.getAgent();
         agent.log("AGREE received from " + ((AID) msg.getSender()).getLocalName());
     }
 
@@ -59,17 +58,8 @@ public class RequestGarbageBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleInform(ACLMessage msg) {
-        ScoutCoordinatorAgent agent = (ScoutCoordinatorAgent) this.getAgent();
-        try {
-            agent.log("INFORM received from " + ((AID) msg.getSender()).getLocalName());
-            // recieve garbage cells
-           
-            ArrayList<BuildingCell> garbageBuildings = (ArrayList<BuildingCell>) msg.getContentObject();
-            agent.addGarbageBuildings(garbageBuildings);
-            agent.log("total garbage: "+agent.getGarbageBuildings());
-        } catch (Exception e) {
-            agent.errorLog("Incorrect content: " + e.toString());
-        }
+        SystemAgent agent = (SystemAgent) this.getAgent();
+        agent.log("AGREE received from " + ((AID) msg.getSender()).getLocalName());
     }
 
     /**
@@ -79,7 +69,7 @@ public class RequestGarbageBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleNotUnderstood(ACLMessage msg) {
-        ScoutCoordinatorAgent agent = (ScoutCoordinatorAgent) this.getAgent();
+        SystemAgent agent = (SystemAgent) this.getAgent();
         agent.log("This message NOT UNDERSTOOD.");
     }
 
@@ -90,7 +80,7 @@ public class RequestGarbageBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleFailure(ACLMessage msg) {
-        ScoutCoordinatorAgent agent = (ScoutCoordinatorAgent) this.getAgent();
+        SystemAgent agent = (SystemAgent) this.getAgent();
         agent.log("The action has failed.");
 
     } //End of handleFailure
@@ -102,7 +92,7 @@ public class RequestGarbageBehaviour extends AchieveREInitiator {
      */
     @Override
     protected void handleRefuse(ACLMessage msg) {
-        ScoutCoordinatorAgent agent = (ScoutCoordinatorAgent) this.getAgent();
+        SystemAgent agent = (SystemAgent) this.getAgent();
         agent.log("Action refused.");
     }
 
