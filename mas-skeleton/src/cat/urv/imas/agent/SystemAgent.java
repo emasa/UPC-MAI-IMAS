@@ -159,7 +159,7 @@ public class SystemAgent extends ImasAgent {
         try {
             AgentController agentController = cc.createNewAgent("Coordinator Agent", CoordinatorAgent.class.getName(), new Object[] {game});
             agentController.start();
-            agentController = cc.createNewAgent("Scout Coordinator Agent", ScoutCoordinatorAgent.class.getName(), null);
+            //agentController = cc.createNewAgent("Scout Coordinator Agent", ScoutCoordinatorAgent.class.getName(), null);
             
             // search CoordinatorAgent
             // searchAgent is a blocking method, so we will obtain always a correct AID        

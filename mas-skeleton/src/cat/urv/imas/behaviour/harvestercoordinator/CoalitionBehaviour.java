@@ -131,20 +131,29 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                         
                         
                         //Get garbage current position
-                        int gX = garbage.getCol();
-                        int gY = garbage.getRow();
-
-                        //Get new coordinate por garbage (adjacent to building)
-                        if (agent.getGame().getMap()[gX + 1][gY].getCellType().equals(CellType.STREET)) {
-                            gX++;
-                        } else if (agent.getGame().getMap()[gX - 1][gY].getCellType().equals(CellType.STREET)) {
-                            gX--;
-                        } else if (agent.getGame().getMap()[gX][gY + 1].getCellType().equals(CellType.STREET)) {
-                            gY++;
-                        } else if (agent.getGame().getMap()[gX - 1][gY - 1].getCellType().equals(CellType.STREET)) {
-                            gY--;
+                        int gX = garbage.getRow();
+                        int gY = garbage.getCol();
+                        System.out.println(gX+" "+gY+"*********************************************");
+                        //Get new coordinate for garbage (adjacent to building)
+                        
+                        ArrayList<Cell> adjacentCells = agent.getGame().getAdjacentCells(new StreetCell(gX,gY));
+                        for (Cell c : adjacentCells){
+                            if(c.getCellType().equals(CellType.STREET)){
+                                gX = c.getRow();
+                                gY = c.getCol();
+                                break;
+                            }
                         }
-
+                        
+                        System.out.println("\n"+garbage+"\n");
+                        System.out.println("\n"+adjacentCells+"\n");
+                        
+                        System.out.println(gX+" "+gY+"*********************************************");
+                        
+                        
+                        
+                        
+                        
                         
                         
                         //Define index to access recycling center prices
@@ -189,16 +198,16 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                                 int price = agent.getGame().getRecyclingCenterPrices()[i][j];
                         
                                 //Get new coordinate por garbage (adjacent to building)
-                                if (agent.getGame().getMap()[rcX + 1][rcY].getCellType().equals(CellType.STREET)) {
-                                    rcX++;
-                                } else if (agent.getGame().getMap()[rcX - 1][rcY].getCellType().equals(CellType.STREET)) {
-                                    rcX--;
-                                } else if (agent.getGame().getMap()[rcX][rcY + 1].getCellType().equals(CellType.STREET)) {
-                                    rcY++;
-                                } else if (agent.getGame().getMap()[rcX - 1][rcY - 1].getCellType().equals(CellType.STREET)) {
-                                    rcY--;
+                                adjacentCells = agent.getGame().getAdjacentCells(new StreetCell(rcX, rcY));
+                                for (Cell c : adjacentCells) {
+                                    if (c.getCellType().equals(CellType.STREET)) {
+                                        rcX = c.getRow();
+                                        rcY = c.getCol();
+                                        break;
+                                    }
                                 }
 
+                                
 
                                 //For each agent
                                 for (String ai : ais) {
@@ -206,14 +215,21 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                                     String agentName = agent.getServiceDescriptionList().get(Integer.parseInt(ai)).getName();
                                     //System.out.println("agentName ::: "+agentName + " for coalition calculation.");
                                 
+                                    
+                                    //CORREGIR ANGEL
                                     aX = 1;
                                     aY = 18;
                                     /*
                                     List<Cell> harvestersCells = (ArrayList<Cell>) agent.getGame().getAgentList().get(AgentType.HARVESTER);
+                                    System.out.println(harvestersCells);
                                     for (int ii = 0; ii < harvestersCells.size(); ii++) {
                                         StreetCell harvesterCell = (StreetCell) harvestersCells.get(ii);
                                         AID harvester = harvesterCell.getAgent().getAID();
-                                        System.out.println(harvester);
+                                        harvesterCell.getAgent().getAID();
+                                        System.out.println(harvesterCell.getAgent().getAID());
+                                        System.out.println(agentName+"*********************");
+                                        System.out.println(harvester.getLocalName()+"*********************");
+                                        
                                         if(harvester.getLocalName().equals(agentName)){
                                             aX = harvesterCell.getRow();
                                             aY = harvesterCell.getCol();

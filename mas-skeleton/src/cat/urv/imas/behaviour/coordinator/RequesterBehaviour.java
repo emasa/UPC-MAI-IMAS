@@ -84,6 +84,9 @@ public class RequesterBehaviour extends AchieveREInitiator {
 //                agent.log("venimos del scout, supuestamente acabo el paso.");
 
                 //ADD MANUALLY GARBAGE TO TEST COALITION
+                
+                ArrayList<BuildingCell> SettableBuildingCellList = agent.getGarbageFound();
+                /*
                 ArrayList<SettableBuildingCell> SettableBuildingCellList = new ArrayList<>();
                       
                 SettableBuildingCell g1 = new SettableBuildingCell(3,3);
@@ -95,7 +98,7 @@ public class RequesterBehaviour extends AchieveREInitiator {
                 SettableBuildingCellList.add(g1);
                 SettableBuildingCellList.add(g2);
                 SettableBuildingCellList.add(g3);
-                
+                */
 //                ArrayList<BuildingCell> garbageBuildings = (ArrayList<BuildingCell>) msg.getContentObject();
 //                agent.addGarbageFound(garbageBuildings);
 //                agent.log("total garbage to comunicate to Harvesters: "+garbageBuildings);
