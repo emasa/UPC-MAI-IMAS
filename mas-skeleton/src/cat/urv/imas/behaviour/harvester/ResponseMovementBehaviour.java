@@ -19,12 +19,15 @@ package cat.urv.imas.behaviour.harvester;
 
 import cat.urv.imas.agent.HarvesterAgent;
 import cat.urv.imas.map.StreetCell;
+import cat.urv.imas.onthology.InfoAgent;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.AchieveREResponder;
 import cat.urv.imas.onthology.MessageContent;
 import jade.lang.acl.UnreadableException;
 import java.util.HashMap;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  * A request-responder behavior for System agent, answering to queries
@@ -60,8 +63,10 @@ public class ResponseMovementBehaviour extends AchieveREResponder {
             HashMap<String,StreetCell> content = (HashMap<String,StreetCell>)msg.getContentObject();
             if (content.keySet().iterator().next().equals(MessageContent.DO_STEP)) {
                 StreetCell nextPosition = (StreetCell) content.get(MessageContent.DO_STEP);
+                // perform movement
                 if(nextPosition != null)
-                    agent.setPosition(nextPosition);
+                    this.execute(agent,nextPosition);
+//                    agent.setPosition(nextPosition);
                 agent.log("my new Cell: "+agent.getPosition());
                 reply.setPerformative(ACLMessage.AGREE);
             }
@@ -103,6 +108,21 @@ public class ResponseMovementBehaviour extends AchieveREResponder {
 //        agent.log(MessageContent.STEP_DONE+ " " + agent.getLocalName());
         return reply;
 
+    }
+
+    private void execute(HarvesterAgent agent, StreetCell nextPosition) {
+        try {
+            StreetCell currentPos = agent.getPosition();
+            InfoAgent HarvesterInfo = currentPos.getAgent();
+            // update the position
+            currentPos.removeAgent(HarvesterInfo);
+            nextPosition.addAgent(HarvesterInfo);
+
+            agent.setPosition(nextPosition);    
+        } catch (Exception ex) {
+            Logger.getLogger(ResponseMovementBehaviour.class.getName()).log(Level.SEVERE, null, ex);
+        }
+        
     }
 
 }

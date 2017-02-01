@@ -97,18 +97,18 @@ public class HarvestersPathFinder {
     }
             
             
-    public static void main(String[]args){
-        
-        //List of harvesters map positions
-        ArrayList<Coordinate> harvestersPositions = null;
-       
-        //List of garbages map positions
-        ArrayList<Coordinate> garbagesPositions = null;
-        
-        HarvestersPathFinder hspf = new HarvestersPathFinder(harvestersPositions,garbagesPositions);
-        
-        
-    
-    }        
+//    public static void main(String[]args){
+//        
+//        //List of harvesters map positions
+//        ArrayList<Coordinate> harvestersPositions = null;
+//       
+//        //List of garbages map positions
+//        ArrayList<Coordinate> garbagesPositions = null;
+//        
+//        HarvestersPathFinder hspf = new HarvestersPathFinder(harvestersPositions,garbagesPositions);
+//        
+//        
+//    
+//    }        
     
 }
