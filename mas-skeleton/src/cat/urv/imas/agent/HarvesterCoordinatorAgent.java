@@ -46,7 +46,7 @@ import java.util.Map;
  */
 public class HarvesterCoordinatorAgent extends ImasAgent{
 
-    private GameSettings game;
+    //private GameSettings game;
      /**
      * Builds the coordinator agent.
      */
@@ -122,14 +122,6 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
 
     public void setCoalitionNumber(int CoalitionNumber) {
         this.CoalitionNumber = CoalitionNumber;
-    }
-    
-    public GameSettings getGame() {
-        return game;
-    }
-
-    public void setGame(GameSettings game) {
-        this.game = game;
     }
 
     

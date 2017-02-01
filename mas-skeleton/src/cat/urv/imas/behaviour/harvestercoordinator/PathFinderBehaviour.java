@@ -7,6 +7,7 @@ import cat.urv.imas.map.CellType;
 import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.GameSettings;
 import cat.urv.imas.onthology.Coordinate;
+import cat.urv.imas.onthology.InitialGameSettings;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;

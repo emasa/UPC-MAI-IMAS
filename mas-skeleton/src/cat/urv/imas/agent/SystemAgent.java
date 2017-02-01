@@ -150,8 +150,8 @@ public class SystemAgent extends ImasAgent {
         this.random = new Random((long) this.game.getSeed());
 
         // this behaviour has to be initiated before other agents
-        MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
-        this.addBehaviour(new RequestResponseBehaviour(this, mt));
+        //MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+        //this.addBehaviour(new RequestResponseBehaviour(this, mt));
 
         ContainerController cc = this.getContainerController();
 
@@ -229,7 +229,7 @@ public class SystemAgent extends ImasAgent {
     
     
     
-        } 
+        //} 
     }
 
     public void updateGUI() {
