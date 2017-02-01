@@ -6,6 +6,7 @@
 package cat.urv.imas.agent;
 
 import cat.urv.imas.map.Cell;
+import cat.urv.imas.onthology.GameSettings;
 import cat.urv.imas.onthology.GarbageType;
 
 /**
@@ -16,6 +17,7 @@ public class HarvesterAgent extends ImasAgent{
 
     private Cell position;
     private GarbageType[] garbageTypes;
+    private GameSettings game;
     
     /**
      * Builds the coordinator agent.
@@ -28,10 +30,11 @@ public class HarvesterAgent extends ImasAgent{
     protected void setup() {
         log("Creatad new Harvester");
         Object[] args = getArguments();
-        if (args != null && args.length > 1) {
+        if (args != null && args.length > 2) {
             position = (Cell) args[0];
             garbageTypes = (GarbageType[]) args[1]; 
-            
+            game = (GameSettings) args[2];
+             
             String typesStr = "";
             for (GarbageType garbageType : garbageTypes) {
                 typesStr += " " + garbageType.getShortString();
@@ -43,6 +46,10 @@ public class HarvesterAgent extends ImasAgent{
             doDelete();
         }
 
+    }
+
+    public GameSettings getGame() {
+        return game;
     }
 
 }

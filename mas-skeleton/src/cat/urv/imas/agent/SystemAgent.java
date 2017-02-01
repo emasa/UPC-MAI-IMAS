@@ -211,6 +211,10 @@ public class SystemAgent extends ImasAgent {
         this.gui.updateGame();
     }
 
+    public void showStats (String stats) {
+        this.gui.showStatistics(stats);
+    }
+    
     public ACLMessage createNewStep() {
         ACLMessage newStepRequest = new ACLMessage(ACLMessage.REQUEST);
         newStepRequest.clearAllReceiver();

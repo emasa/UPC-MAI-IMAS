@@ -71,6 +71,9 @@ public class CoordinatorAgent extends ImasAgent {
     
     ArrayList<BuildingCell> garbageCollecting;
 
+    private boolean scoutsFinished = false;
+    private boolean harvestersFinished = false;
+
     /**
      * Builds the coordinator agent.
      */
@@ -78,7 +81,7 @@ public class CoordinatorAgent extends ImasAgent {
         super(AgentType.COORDINATOR);
         garbageFound = new ArrayList<>();
         garbageCollected = new ArrayList<>();
-        garbageCollecting = new ArrayList<>();        
+        garbageCollecting = new ArrayList<>();   
     }
 
     /**
@@ -361,6 +364,22 @@ public class CoordinatorAgent extends ImasAgent {
        
         return stepsRequest;
 
+    }
+
+    public void setScoutsFinished(boolean scoutsFinished) {
+        this.scoutsFinished = scoutsFinished;
+    }
+
+    public boolean getScoutsFinished() {
+        return scoutsFinished;
+    }
+
+    public boolean getHarvestersFinished() {
+        return harvestersFinished;
+    }
+
+    public void setHarvestersFinished(boolean harvestersFinished) {
+        this.harvestersFinished = harvestersFinished;
     }
     
 }

@@ -70,6 +70,7 @@ public class StepsResponseBehaviour extends AchieveREResponder {
         ScoutCoordinatorAgent agent = (ScoutCoordinatorAgent)this.getAgent();
         ACLMessage reply = msg.createReply();
         try {
+            // WARNING: Use MessageWrapper
             MessageWrapper msgWrapper = (MessageWrapper) msg.getContentObject();
             if (msgWrapper != null) {
                 switch (msgWrapper.getType()) {

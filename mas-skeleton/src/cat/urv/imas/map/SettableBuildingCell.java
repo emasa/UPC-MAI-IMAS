@@ -46,6 +46,14 @@ public class SettableBuildingCell extends BuildingCell {
         garbage.put(type, amount);
     }
 
+    public int getCollectedGarbage() {
+        return collectedGarbage;
+    }
+
+    public int getNotCollectedYetGarbage() {
+        return garbage.size();
+    }    
+    
     public List<Integer> getCreationStepHistory() {
         return creationStepHistory;
     }

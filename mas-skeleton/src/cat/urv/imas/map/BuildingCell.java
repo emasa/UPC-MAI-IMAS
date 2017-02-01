@@ -19,8 +19,8 @@ package cat.urv.imas.map;
 
 import cat.urv.imas.gui.CellVisualizer;
 import cat.urv.imas.onthology.GarbageType;
+import java.util.ArrayList;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 
@@ -52,11 +52,11 @@ public class BuildingCell extends Cell {
     protected int discoveryStep = -1;
     protected int startCollectionStep = -1;
     protected int collectedGarbage = -1;
-    // history counter
-    protected List<Integer> creationStepHistory = new LinkedList<>();
-    protected List<Integer> discoveryStepHistory = new LinkedList<>();
-    protected List<Integer> startCollectionStepHistory = new LinkedList<>();
-    protected List<Integer> collectedGarbageHistory = new LinkedList<>();       
+    // history counters
+    protected List<Integer> creationStepHistory = new ArrayList<>();
+    protected List<Integer> discoveryStepHistory = new ArrayList<>();
+    protected List<Integer> startCollectionStepHistory = new ArrayList<>();
+    protected List<Integer> collectedGarbageHistory = new ArrayList<>();       
     
     /**
      * Builds a cell corresponding to a building.

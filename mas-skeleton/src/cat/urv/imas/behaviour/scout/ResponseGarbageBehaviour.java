@@ -32,6 +32,7 @@ import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
+import java.util.Random;
 
 /**
 
@@ -77,7 +78,6 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
             reply.setPerformative(ACLMessage.FAILURE);
             scout.errorLog(e.getMessage());
         }
-        scout.log("Response being prepared");
         return reply;
     }
 
@@ -122,10 +122,14 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
     public void reset() {
     }
 
-    public void execute(ScoutAgent scout) {
-        
+    public void execute(ScoutAgent scout) {       
+        // it doesn't work because the cells are copies not the actual instance
+//        ArrayList<BuildingCell> buildingsWithNewGarbage = this.detectBuildingsWithNewGarbage(scout);
+
         // detect buildings with garbage in the current position
-        ArrayList<BuildingCell> buildingsWithNewGarbage = detectBuildingsWithNewGarbage(scout);
+        ArrayList<BuildingCell> buildingsWithNewGarbage = scout.getGame().detectBuildingsWithGarbage(scout.getPosition().getRow(), 
+                                                                                                     scout.getPosition().getCol());        
+        
         scout.setGarbageCells(buildingsWithNewGarbage);
         // move if possible
         nextMove(scout);
@@ -161,43 +165,45 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
     }
 
     private void nextMove(ScoutAgent scout) {
-        StreetCell currentPos = scout.getCurrentPosition();
-        int currentDir = scout.getCurrentDirection();     
-        
-        scout.log("Current position: " + currentPos + "Current direction: " + currentDir);
+        StreetCell currentPos = scout.getCurrentPosition();        
+        // get the actual instance
+        currentPos = (StreetCell) scout.getGame().get(currentPos.getRow(), currentPos.getCol());
+        InfoAgent scoutInfo = currentPos.getAgent();
+
         StreetCell[] priorityDirs = this.getPriorityDirections(scout);
+
         for (int dir = 0 ; dir < 4 ; ++dir) {
-            // round-robin
-            int candidateDir;
+            int chosen_dir = dir;
+            // desde la posicion offset se elige de forma aletoria
+            // con offset 4, la estrategia esta totalmente definida (no random)
+            int offset = 4; int allow_stay = 0;
+            if (chosen_dir >= offset)
+                chosen_dir = (new Random()).nextInt(4-offset+allow_stay) + offset;
             
-            if (currentDir != ScoutAgent.CENTER) {
-                candidateDir = (currentDir + dir) % 4;
-            } else {
-                candidateDir = dir;
+            if (allow_stay == 1 && chosen_dir == ScoutAgent.CENTER) {
+                break; // scout won't move
             }
-
-            scout.log("Current direction: " + currentDir + " dir: " + dir);            
-            scout.log("Evaluating candidate direction: " + candidateDir);
             
-            StreetCell candidatePos = priorityDirs[candidateDir];
-            scout.log("Evaluating candidate position: " + candidatePos);            
+            // round-robin according to priority
+            StreetCell candidatePos = priorityDirs[chosen_dir];            
             
-            if (candidatePos != null && !candidatePos.isThereAnAgent()) {
-                InfoAgent scoutInfo = currentPos.getAgent();
-                try {
-                    //currentPos.removeAgent(scoutInfo);
-                    //candidatePos.addAgent(scoutInfo);
+            if (candidatePos != null) {
+                // get the actual instances
+                candidatePos = (StreetCell) scout.getGame().get(candidatePos.getRow(), candidatePos.getCol());
+                if (!candidatePos.isThereAnAgent()) {
+                    try {
+                        // update the position
+                        currentPos.removeAgent(scoutInfo);
+                        candidatePos.addAgent(scoutInfo);
 
-                    StreetCell currentPos2 = (StreetCell) scout.getGame().get(currentPos.getRow(), currentPos.getCol());
-                    StreetCell candidatePos2 = (StreetCell) scout.getGame().get(candidatePos.getRow(), candidatePos.getCol());
-                    currentPos2.removeAgent(scoutInfo);
-                    candidatePos2.addAgent(scoutInfo);    
-                    scout.setCurrentDirection(candidateDir);
-                    scout.setCurrentPosition(candidatePos2);
-                    
-                    break;
-                } catch (Exception e) {
-                    scout.log("Movement failed" + e);
+                        int candidateDir = getDirection(currentPos, candidatePos);                    
+                        scout.setCurrentDirection(candidateDir);
+                        scout.setCurrentPosition(candidatePos);
+
+                        break;
+                    } catch (Exception e) {
+                        scout.errorLog("Movement failed" + e);
+                    }
                 }
             }
         }
@@ -206,7 +212,7 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
         if (currentPos == scout.getCurrentPosition()) {
             scout.setCurrentDirection(ScoutAgent.CENTER);
         }
-    }
+    } 
 
     private StreetCell[] getPriorityDirections(ScoutAgent scout) {
         // direction is null if invalid movement
@@ -216,7 +222,7 @@ public class ResponseGarbageBehaviour extends AchieveREResponder {
             // filter surrounding cells containing a street
             if (cell.getCellType() == CellType.STREET) {
                 StreetCell nextPos = (StreetCell) cell;
-                scout.log("Testing " + nextPos.toString());
+                //scout.log("Testing " + nextPos.toString());
                 int nextPosDir = getDirection(scout.getCurrentPosition(), nextPos);
                 if (nextPosDir != ScoutAgent.INVALID) {                            
                     dirs[nextPosDir] = nextPos;                

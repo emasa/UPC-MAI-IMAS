@@ -217,17 +217,17 @@ public class GameSettings implements java.io.Serializable {
         return map;
     }
     
-    public Cell[] detectBuildingsWithGarbage(int row, int col) {
+    public ArrayList<BuildingCell> detectBuildingsWithGarbage(int row, int col) {
         //      find all surrounding cells to (row,col) that are
         //      buildings and have garbage on it.
         //      Use: BuildingCell.detectGarbage() to do so.        
         int rows = map.length, cols = map[0].length;
-        ArrayList<Cell> buildingsWithGarbage = new ArrayList<>();
+        ArrayList<BuildingCell> buildingsWithGarbage = new ArrayList<>();
 
         for (int dy = -1 ; dy <= 1 ; ++dy ) {
             for (int dx = -1 ; dx <= 1 ; ++dx ) {
                 int y = row + dy, x = col + dx;
-                // check bounderies and filter surrounding cells containing a building
+                // check bounderies and filter surrounding cells containing a building                
                 if (0 <= y && y < rows && 0 <= x && x < cols && 
                     row != y && col != x &&
                     this.get(y, x).getCellType() == CellType.BUILDING ) {
@@ -243,8 +243,8 @@ public class GameSettings implements java.io.Serializable {
                 }
             }
         }
-        // return a array with the buildings 
-        return buildingsWithGarbage.toArray(new Cell[buildingsWithGarbage.size()]);
+
+        return buildingsWithGarbage;
     }
     
     /**

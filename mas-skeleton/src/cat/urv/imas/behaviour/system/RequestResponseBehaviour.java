@@ -86,6 +86,9 @@ public class RequestResponseBehaviour extends AchieveREResponder {
                             runStep.addSubBehaviour(new NewGarbageBehaviour(agent));
                             runStep.addSubBehaviour(new SendNewStep(agent, agent.createNewStep()));
                             agent.addBehaviour(runStep);
+                        } else {
+                            // show final statistics
+                            agent.addBehaviour(new ComputeStatisticsBehaviour(agent));
                         }
                         
                         break;

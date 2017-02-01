@@ -51,12 +51,26 @@ public class GarbageReciever extends AchieveREResponder {
                         ArrayList<BuildingCell> garbageBuildings = (ArrayList<BuildingCell>) msgWrapper.getObject();
                         agent.addGarbageFound(garbageBuildings);
                         agent.log("Recieved from Scout Coordinator " + garbageBuildings);
-                        agent.addBehaviour(new RequesterBehaviour(agent, agent.createStepFinished()));
+                        
+                        // TODO: copiar este codigo en el mensaje viniendo de los harvesters
+                        // cuando el ultimo termina se envia el mensaje al system
+                        // USAR agent.setHarvestersFinished(true); en lugar de scouts
+                        agent.setScoutsFinished(true);                        
+                        if (agent.getScoutsFinished() && agent.getHarvestersFinished()) {
+                            agent.addBehaviour(new RequesterBehaviour(agent, agent.createStepFinished()));
+                        }
                         
                         reply.setPerformative(ACLMessage.AGREE);
                         break;
                     case MessageContent.NEW_STEP:
                         agent.log("Recieved from System agent new simulation step");
+                        agent.setScoutsFinished(false);
+                        // agent.setHarvestersFinished(false);
+
+                        // TODO: WARNING setear harvesters finished a FALSE cuando
+                        // se tenga todo el ciclo
+                        agent.setHarvestersFinished(true);                        
+
                         agent.addBehaviour(new RequesterBehaviour(agent, agent.createNewStepRequest()));                        
                         reply.setPerformative(ACLMessage.AGREE);
                         break;
