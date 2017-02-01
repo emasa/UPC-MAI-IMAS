@@ -1,5 +1,5 @@
 
-package cat.urv.imas.behaviour.coordinatorHarvester;
+package cat.urv.imas.behaviour.harvestercoordinator;
 
 import cat.urv.imas.agent.HarvesterCoordinatorAgent;
 import cat.urv.imas.map.Cell;
@@ -20,7 +20,7 @@ import java.util.List;
 
 
 public class PathFinderBehaviour {
-    
+    /*
     //Harvester coordinates (x,y)
     private final int [] haversterCoord;
     
@@ -228,7 +228,7 @@ public class PathFinderBehaviour {
         System.out.println("harvesterPos = "+harvesterPos);
         System.out.println("garbagePos = "+garbagePos);
         System.out.println();
-        
+    */    
         /*
         for(int i=0; i<PFB.rows; i++){
             for(int j=0; j<PFB.cols; j++){
@@ -237,7 +237,7 @@ public class PathFinderBehaviour {
             System.out.println();
         }
         */
-        
+    /*    
         List<Integer> OptimalPath = null;
         
         PFB.initGraph();
@@ -275,5 +275,5 @@ public class PathFinderBehaviour {
         
     } 
     
-    
+    */
 }

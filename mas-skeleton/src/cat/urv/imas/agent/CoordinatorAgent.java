@@ -149,83 +149,10 @@ public class CoordinatorAgent extends ImasAgent {
         addBehaviour(new InitialInformToHarvesterCoordinatorAgentBehaviour(this));
     
         // comento esta linea, porque en este punto el coordinator ya debe tener seteada esa variable.
-        // this.setGame(InitialGameSettings.load("game.settings"));
+         this.setGame(InitialGameSettings.load("game.settings"));
         
         log("Initial configuration settings loaded");
         //FIN DARIO
-//        // contract net system
-//        ServiceDescription searchHC = new ServiceDescription();     
-//        searchHC.setType(AgentType.HARVESTER_COORDINATOR.toString());
-//        this.hcAgent = UtilsAgents.searchAgent(this, searchHC);    
-//        
-//        // TODO: CHANGE THIS FOR GARBAGE LIST
-//        ////////////// Dummy SettableBuildingCell 
-//        SettableBuildingCell celda = new SettableBuildingCell(0, 1);
-//        celda.setGarbage(GarbageType.PAPER, 2);
-//        ///////////////
-//        
-//        // Fill the CFP message
-//        ACLMessage contract = new ACLMessage(ACLMessage.CFP);
-//        contract.addReceiver(this.hcAgent);
-//        contract.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
-//        // We want to receive a reply in 10 secs
-//        contract.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
-//        contract.setConversationId("C:dummy");
-//        
-//        try {
-//            contract.setContentObject(celda);
-//        } catch (IOException ex) {
-//            Logger.getLogger(CoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        log("ContractNet Started");
-//        String content = celda.getMapMessage()+" in R"+celda.getRow()+" C"+celda.getCol();
-//        System.out.println("1. "+getLocalName()+": sent contract "+contract.getConversationId());
-//        
-//        this.addBehaviour(new ContractNetInitiator(this, contract) {			
-//            @Override
-//            protected void handlePropose(ACLMessage propose, Vector v) {
-//                // Receive Proposal
-//                System.out.println("3. "+propose.getSender().getName()+": proposed a coalition on "+propose.getConversationId());
-//            }
-//
-//            @Override
-//            protected void handleRefuse(ACLMessage refuse) {
-//                System.out.println("3. "+refuse.getSender().getName()+": refused "+refuse.getConversationId());
-//            }
-//
-//            @Override
-//            protected void handleFailure(ACLMessage failure) {
-//                if (failure.getSender().equals(myAgent.getAMS())) {
-//                    // FAILURE notification from the JADE runtime: the receiver
-//                    // does not exist
-//                    System.out.println("Responder does not exist");
-//                }
-//                else {
-//                    System.out.println("Agent "+failure.getSender().getName()+" failed "+failure.getConversationId());
-//                }
-//            }
-//
-//            @Override
-//            protected void handleAllResponses(Vector responses, Vector acceptances) {
-//                // Accept Proposal. CA always accepts proposal
-//                Enumeration e = responses.elements();
-//                while (e.hasMoreElements()) {
-//                    ACLMessage proposal = (ACLMessage) e.nextElement();                    
-//                    ACLMessage accept = proposal.createReply();
-//                    accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-//                    acceptances.addElement(accept);
-//                    accept.setContent(proposal.getContent()); 
-//                    System.out.println("4. "+getLocalName()+": accepted proposal "+proposal.getContent() + " for "+ proposal.getConversationId());
-//                }             
-//            }
-//                        
-//            @Override
-//            protected void handleInform(ACLMessage inform) {
-//                System.out.println("8. "+inform.getSender().getName()+": successfully performed "+inform.getConversationId());
-//            }
-//        });
-        /* ********************************************************************/
-        
     }
 
     
@@ -250,14 +177,14 @@ public class CoordinatorAgent extends ImasAgent {
             }
             
             // Search for services of name "HARVESTERCOORDINATOR"
-            String serviceName = AgentType.HARVESTER_COORDINATOR.toString();
+            String serviceType = AgentType.HARVESTER_COORDINATOR.toString();
             
-            System.out.println("Agent "+getLocalName()+" searching for services of type "+serviceName);
+            System.out.println("Agent "+getLocalName()+" searching for services of type "+serviceType);
             try {
                 // Build the description used as template for the search
                 DFAgentDescription template = new DFAgentDescription();
                 ServiceDescription templateSd = new ServiceDescription();
-                templateSd.setName(serviceName);
+                templateSd.setType(serviceType);
                 template.addServices(templateSd);
   		
                 SearchConstraints sc = new SearchConstraints();
@@ -267,7 +194,7 @@ public class CoordinatorAgent extends ImasAgent {
                 DFAgentDescription[] results = DFService.search(CoordinatorAgent.this, template, sc);
                 
                 if (results.length > 0) {
-                    System.out.println("Agent "+getAID()+" found the following services:");
+                    System.out.println("Agent "+getAID().getLocalName()+" found the service type " + serviceType );
                     for (int i = 0; i < results.length; ++i) {
   			DFAgentDescription dfd = results[i];
   			AID provider = dfd.getName();
@@ -285,7 +212,7 @@ public class CoordinatorAgent extends ImasAgent {
                     }
                 }	
                 else {
-                    System.out.println("Agent "+getLocalName()+" did not find any "+serviceName+ " service");
+                    System.out.println("Agent "+getLocalName()+" did not find any "+serviceType+ " service");
                 }
             
             }

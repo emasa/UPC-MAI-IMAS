@@ -28,6 +28,7 @@ import cat.urv.imas.map.SettableBuildingCell;
 import cat.urv.imas.onthology.GameSettings;
 import cat.urv.imas.onthology.GarbageType;
 import cat.urv.imas.onthology.MessageContent;
+import cat.urv.imas.onthology.MessageWrapper;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPANames;
 import jade.proto.ContractNetInitiator;
@@ -120,7 +121,7 @@ public class RequesterBehaviour extends AchieveREInitiator {
                 
                 // Cycle through garbageBuildings to get cell and start a ContractNet
                 for (int i = 0; i < SettableBuildingCellList.size(); i++) {
-                    BuildingCell celda = SettableBuildingCellList.remove(i);
+                    BuildingCell celda = SettableBuildingCellList.get(i);
                     // Fill the CFP message
                     ACLMessage contract = new ACLMessage(ACLMessage.CFP);
                     contract.addReceiver(agent.getHarvesterCoordinatorAgent());             // Receiver is HarvesterCoordinator
@@ -130,7 +131,11 @@ public class RequesterBehaviour extends AchieveREInitiator {
                     System.out.println("1. "+agent.getLocalName()+": sent contract "+contract.getConversationId());
                     
                     try {
-                        contract.setContentObject(celda);
+                        MessageWrapper mmm = new MessageWrapper();
+                        mmm.setType(MessageContent.SETTABLE_BUILDING);
+                        mmm.setObject(celda);
+                        
+                        contract.setContentObject(mmm);
                     } catch (IOException ex) {
                         Logger.getLogger(CoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
                     }

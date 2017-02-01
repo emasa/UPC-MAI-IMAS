@@ -46,6 +46,16 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
 
     private GameSettings game = null;
 
+    private int CoalitionNumber = 1;
+
+    public int getCoalitionNumber() {
+        return CoalitionNumber;
+    }
+
+    public void setCoalitionNumber(int CoalitionNumber) {
+        this.CoalitionNumber = CoalitionNumber;
+    }
+    
     public GameSettings getGame() {
         return game;
     }
@@ -93,16 +103,27 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         this.RecyclingCenter = RecyclingCenter;
     }
     
+    public void addRecyclingCenter(Cell RecyclingCenter) {
+        this.RecyclingCenter.add(RecyclingCenter);
+    }
+    public void clearRecyclingCenter() {
+        this.RecyclingCenter.clear();
+    }
+    
+    
     private ArrayList<SettableBuildingCell> SettableBuildingCellList = new ArrayList<>();
     private ArrayList<ServiceDescription> ServiceDescriptionList = new ArrayList<>();
     private ArrayList<Integer> AgentStatus = new ArrayList<>();
     private ArrayList<Cell> RecyclingCenter = new ArrayList<>();
     
-    
     public HarvesterCoordinatorAgent() {
         super(AgentType.HARVESTER_COORDINATOR);
     }
 
+    
+    
+    
+    
     @Override
     protected void setup() {
         /* ** Very Important Line (VIL) ***************************************/
@@ -127,25 +148,30 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         }        
         log("Creatad new Harvester Coordinator: " + getLocalName());
 
+        //Behaviours
+        addBehaviour(new SearchHarvesterBehaviour(this));
+        addBehaviour(new ReceiveInfoBehaviour(this));
+        addBehaviour(new CoalitionBehaviour(this));
+
+        
         /* ********************************************************************/    
         // contract net system        
-        System.out.println("Agent "+getLocalName()+" waiting for CFP...");
-  	MessageTemplate template = MessageTemplate.and(
-            MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
-            MessageTemplate.MatchPerformative(ACLMessage.CFP) );
-  		
-	addBehaviour(new ContractNetResponder(this, template) {
+        System.out.println("Agent " + getLocalName() + " waiting for CFP...");
+        MessageTemplate template = MessageTemplate.and(
+                MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET),
+                MessageTemplate.MatchPerformative(ACLMessage.CFP));
+        addBehaviour(new ContractNetResponder(this, template) {
             @Override
             protected ACLMessage prepareResponse(ACLMessage cfp) throws NotUnderstoodException, RefuseException {
                 SettableBuildingCell proposal = null;
                 try {
-                    // Call evaluateAction to convert cfp to SettableBuildingCell
+                    //Call evaluateAction to convert cfp to SettableBuildingCell
                     proposal = evaluateAction(cfp);
-                    System.out.println("2. "+getLocalName()+": contract "+cfp.getConversationId()+" received from "+cfp.getSender().getName());
-		} catch (UnreadableException ex) {
+                    System.out.println("2. " + getLocalName() + ": contract " + cfp.getConversationId() + " received from " + cfp.getSender().getName());
+                } catch (UnreadableException ex) {
                     Logger.getLogger(HarvesterCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
-                    System.out.println("2. "+getLocalName()+": Refuse");
-                    throw new RefuseException("evaluation-failed");                    
+                    System.out.println("2. " + getLocalName() + ": Refuse");
+                    throw new RefuseException("evaluation-failed");
                 }
                 // Provide a proposal: HC always accepts proposal           
                 ACLMessage propose = cfp.createReply();
@@ -154,78 +180,61 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
                     propose.setContentObject(proposal);
                 } catch (IOException ex) {
                     Logger.getLogger(CoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
-                }                
-                propose.setContent(String.valueOf(proposal));                 
-                return propose;              
+                }
+                propose.setContent(String.valueOf(proposal));
+                return propose;
             }
-			
+
             @Override
             protected ACLMessage prepareResultNotification(ACLMessage cfp, ACLMessage propose, ACLMessage accept) throws FailureException {
-                System.out.println("5. "+getLocalName()+": proposal for contract "+accept.getConversationId()+" was accepted");
-		if (performAction()) {
-                    System.out.println("7. "+getLocalName()+": Action successfully performed on "+accept.getConversationId());
+                System.out.println("5. " + getLocalName() + ": proposal for contract " + accept.getConversationId() + " was accepted");
+
+                SettableBuildingCell action = null;
+                try {
+                    // Call evaluateAction to convert cfp to SettableBuildingCell
+                    action = evaluateAction(cfp);
+                } catch (UnreadableException ex) {
+                    Logger.getLogger(HarvesterCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
+                }
+
+                if (performAction(action)) {
+                    System.out.println("7. " + getLocalName() + ": Action successfully performed on " + accept.getConversationId());
                     ACLMessage inform = accept.createReply();
                     inform.setPerformative(ACLMessage.INFORM);
                     inform.setContent(accept.getContent());
                     return inform;
-		}
-		else {
-                    System.out.println("7. "+getLocalName()+": action execution failed on "+accept.getConversationId());
+                } else {
+                    System.out.println("7. " + getLocalName() + ": action execution failed on " + accept.getConversationId());
                     throw new FailureException("unexpected-error");
-		}	
+                }
             }
-			
+
             protected void handleRejectProposal(ACLMessage reject) {
-                System.out.println("5. "+getLocalName()+": Proposal:"+reject.getConversationId()+" rejected");
+                System.out.println("5. " + getLocalName() + ": Proposal:" + reject.getConversationId() + " rejected");
             }
-        } );
+        });
+                
+  		
+	
     }
   
     private SettableBuildingCell evaluateAction(ACLMessage contract) throws UnreadableException {
   	// Convert ACLMessage to SettableBuildingCell
-        SettableBuildingCell proposal = (SettableBuildingCell) contract.getContentObject();
-
+        MessageWrapper proposal1 = (MessageWrapper) contract.getContentObject();
+        SettableBuildingCell proposal = (SettableBuildingCell) proposal1.getObject();
   	return proposal;
     }
   
-    private boolean performAction() { 
-        System.out.println("6. "+getLocalName()+": formed a coalition");
+    private boolean performAction(SettableBuildingCell action) { 
         
-        //INICIO DARIO
-        // Register the service
-        String serviceName = AgentType.HARVESTER_COORDINATOR.toString();
-        String serviceType = AgentType.HARVESTER_COORDINATOR.toString();
-        try {
-                
-            DFAgentDescription dfd = new DFAgentDescription();
-            dfd.setName(getAID());
-            ServiceDescription sd = new ServiceDescription();
-            sd.setName(serviceName);
-            sd.setType(serviceType);
-            sd.addLanguages(FIPANames.ContentLanguage.FIPA_SL);
-            dfd.addServices(sd);
-  		
-            DFService.register(this, dfd);
-            System.out.println("Agent "+getLocalName()+" registering service \""+serviceName+"\" of type "+serviceType);
-  	
-        }
-        catch (FIPAException e) {
-            e.printStackTrace();
-        }
+        addSettableBuildingCellList(action);
+        System.out.println("6. "+getLocalName()+": formed a coalition");        
         
-        
-        //Behaviours
-        addBehaviour(new SearchHarvesterBehaviour(this));
-        addBehaviour(new ReceiveInfoBehaviour(this));
-        addBehaviour(new CoalitionBehaviour(this));
-       // return true;
-        //FIN DARIO
-        
+        return true;
     }  
     
     
     //INICIO DARIO
-    
     
     
     private class ReceiveInfoBehaviour extends CyclicBehaviour {
@@ -239,45 +248,52 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
             
             HarvesterCoordinatorAgent agent = (HarvesterCoordinatorAgent)this.getAgent();
             
-            ACLMessage msg= receive();
+            ACLMessage msg= blockingReceive(ACLMessage.INFORM);
             if (msg!=null){
                 try {
-                    if(msg.getContentObject().getClass().equals(MessageWrapper.class)){
+                    if (msg.getContentObject().getClass().equals(MessageWrapper.class)) {
                         MessageWrapper message = (MessageWrapper) msg.getContentObject();
-                        switch(message.getType()){
-                        case MessageContent.SEND_GAME:
-                            agent.setGame((GameSettings) message.getObject());
-                            System.out.println( " Message Object Received " + " <----------- " + message.getType() );
-                            //Populate RecyclingCenter list
-                            try{
-                                for(Cell[] cc : agent.game.getMap()){
-                                    for(Cell c : cc){
-                                        if(c.getCellType().equals(CellType.RECYCLING_CENTER)){
-                                            RecyclingCenter.add(c);
+                        switch (message.getType()) {
+                            case MessageContent.SEND_GAME:
+                                agent.setGame((GameSettings) message.getObject());
+                                //System.out.println(" Message Object Received " + " <----------- " + message.getType());
+                                //Populate RecyclingCenter list
+                                try {
+                                    agent.clearRecyclingCenter();
+                                    for (Cell[] cc : agent.game.getMap()) {
+                                        for (Cell c : cc) {
+                                            if (c.getCellType().equals(CellType.RECYCLING_CENTER)) {
+                                                RecyclingCenter.add(c);
+                                            }
                                         }
                                     }
+                                } catch (Exception e) {
                                 }
-                            } catch (Exception e) {
-                            }
-                            
-                        case MessageContent.SETTABLE_BUILDING:
-                            System.out.println( " Message Object Received " + " <----------- " + message.getType() );
-                            //AQUI VA EL CONTRACT NET DE DANIEL
-                            //agrego un elemento a la lista de SettableBuildingCellList
+
+                            case MessageContent.SETTABLE_BUILDING:
+                                agent.send(msg);
+
+                            default:
+
                         }
+                    } else {
+                        System.out.println(msg.getContentObject().getClass());
                     }
-                    
-                    
                 } catch (UnreadableException ex) {
                     Logger.getLogger(HarvesterCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
                 }
-                //block();
+                
+        
+                
+                
+                
+                
             }
         }
   	// Call coalition to collect garbage
 //        MessageWrapper messageCoalition = new MessageWrapper.setObject();
         // coalition(cellBuilding)
-        return true;
+       // return true;
     }
     
     

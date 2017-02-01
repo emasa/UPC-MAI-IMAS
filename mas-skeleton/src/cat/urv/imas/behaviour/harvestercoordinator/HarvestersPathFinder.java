@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package cat.urv.imas.behaviour.coordinatorHarvester;
+package cat.urv.imas.behaviour.harvestercoordinator;
 
 import cat.urv.imas.onthology.Coordinate;
 import cat.urv.imas.onthology.InitialGameSettings;
@@ -14,7 +14,7 @@ import java.util.Random;
  * @author pabloreynoso
  */
 public class HarvestersPathFinder {
-    
+    /*
     
     //Harvesters positions list of coordinates
     private final ArrayList<Coordinate> harvestersPositions;
@@ -110,4 +110,5 @@ public class HarvestersPathFinder {
         
     
     }        
+    */
 }

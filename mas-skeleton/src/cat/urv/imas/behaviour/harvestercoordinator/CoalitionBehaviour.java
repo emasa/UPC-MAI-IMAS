@@ -8,6 +8,7 @@ package cat.urv.imas.behaviour.harvestercoordinator;
 import cat.urv.imas.agent.AgentType;
 import cat.urv.imas.agent.HarvesterCoordinatorAgent;
 import cat.urv.imas.map.Cell;
+import cat.urv.imas.map.CellType;
 import cat.urv.imas.map.SettableBuildingCell;
 import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.GarbageType;
@@ -38,10 +39,11 @@ public class CoalitionBehaviour extends CyclicBehaviour {
         public void action() {
             HarvesterCoordinatorAgent agent = (HarvesterCoordinatorAgent)this.getAgent();
             
-            int CoalitionNumber = 1;
+            int CoalitionNumber = agent.getCoalitionNumber();
             
             
             //ADD MANUALLY GARBAGE TO TEST COALITION
+            /*
             SettableBuildingCell g1 = new SettableBuildingCell(3,3);
             g1.setGarbage(GarbageType.PAPER, 10);
             SettableBuildingCell g2 = new SettableBuildingCell(16,3);
@@ -51,7 +53,7 @@ public class CoalitionBehaviour extends CyclicBehaviour {
             agent.addSettableBuildingCellList(g1);
             agent.addSettableBuildingCellList(g2);
             agent.addSettableBuildingCellList(g3);
-            
+            */
             //agent.game = InitialGameSettings.load("game.settings");
             
             if(!(agent.getGame() == null)){
@@ -159,17 +161,16 @@ public class CoalitionBehaviour extends CyclicBehaviour {
 
                                 int rcX = recyclingCenter.getRow();
                                 int rcY = recyclingCenter.getCol();
-
                                 int price = agent.getGame().getRecyclingCenterPrices()[i][j];
                                 //For each agent
                                 for (String ai : ais) {
                                     //Get agent current position
                                     String agentName = agent.getServiceDescriptionList().get(Integer.parseInt(ai)).getName();
-                                    System.out.println("agentName ::: "+agentName + " for coalition calculation.");
+                                    //System.out.println("agentName ::: "+agentName + " for coalition calculation.");
                                 
                                     int aX = 0;
                                     int aY = 0;
-                                    
+                                    /*
                                     List<Cell> harvestersCells = (ArrayList<Cell>) agent.getGame().getAgentList().get(AgentType.HARVESTER);
                                     for (int ii = 0; ii < harvestersCells.size(); ii++) {
                                         StreetCell harvesterCell = (StreetCell) harvestersCells.get(ii);
@@ -181,7 +182,7 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                                         }
                                         
                                     }                                  
-                                    
+                                    */
                                     
                                     //CoalitonCost update 
                                     CoalitionCost -= distance(aX, aY, gX, gY);
@@ -226,7 +227,7 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                                 
                         //Increment CoalitionNumber
                         CoalitionNumber++;
-
+                        agent.setCoalitionNumber(CoalitionNumber);
                         agent.getSettableBuildingCellList().remove(0);
                     }
                     
