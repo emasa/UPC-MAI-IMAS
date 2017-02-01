@@ -32,6 +32,7 @@ import static cat.urv.imas.agent.ImasAgent.OWNER;
 import cat.urv.imas.behaviour.harvestercoordinator.PathFinderBehaviour;
 import cat.urv.imas.behaviour.harvestercoordinator.StepsResponseBehaviour;
 import cat.urv.imas.map.StreetCell;
+import cat.urv.imas.onthology.InitialGameSettings;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.ContractNetResponder;
 import jade.domain.FIPAAgentManagement.NotUnderstoodException;
@@ -250,8 +251,11 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         addBehaviour(new CoalitionBehaviour(this));
         addBehaviour(new StartGraphBehaviour(this));
         addBehaviour(new CheckEmptyBuildingBehaviour(this));
-                
-
+          
+        //Esto no deberia estar aca, pero dentro del behaviour cyclico que 
+        //escucha, captura los mensajes del contract net y no he podido filtrarlos
+        //con exito.
+        
         
         /* ********************************************************************/    
         // contract net system        

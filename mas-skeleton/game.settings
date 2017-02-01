@@ -3,7 +3,7 @@
     <harvestersCapacity>6</harvestersCapacity>
     <maxAmountOfNewGargabe>5</maxAmountOfNewGargabe>
     <maxNumberBuildingWithNewGargabe>5</maxNumberBuildingWithNewGargabe>
-    <newGarbageProbability>10</newGarbageProbability>
+    <newGarbageProbability>0.1</newGarbageProbability>
     <recyclingCenterPrices>
         <item>9</item>
         <item>10</item>
