@@ -5,6 +5,7 @@
  */
 package cat.urv.imas.agent;
 
+import cat.urv.imas.behaviour.harvester.ResponseMovementBehaviour;
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.GameSettings;
@@ -16,6 +17,8 @@ import jade.domain.FIPAAgentManagement.Property;
 import jade.domain.FIPAAgentManagement.ServiceDescription;
 import jade.domain.FIPAException;
 import jade.domain.FIPANames;
+import jade.lang.acl.ACLMessage;
+import jade.lang.acl.MessageTemplate;
 
 /**
  *
@@ -82,7 +85,12 @@ public class HarvesterAgent extends ImasAgent{
                 e.printStackTrace();
             }
             //FIN DARIO
-        
+            
+            // add behaviours
+        // we wait for the initialization of the game
+        MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+
+        this.addBehaviour(new ResponseMovementBehaviour(this, mt));
         
         }
         else {
@@ -94,6 +102,14 @@ public class HarvesterAgent extends ImasAgent{
 
     public GameSettings getGame() {
         return game;
+    }
+
+    public StreetCell getPosition() {
+        return position;
+    }
+
+    public void setPosition(StreetCell position) {
+        this.position = position;
     }
 
 }

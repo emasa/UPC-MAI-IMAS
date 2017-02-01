@@ -108,7 +108,7 @@ public class StepsResponseBehaviour extends AchieveREResponder {
                                 harvestersMovement.addSubBehaviour(new RequestMovementBehaviour(agent, stepMovement));
                             }//else if(){}
                         }
-                        agent.addBehaviour(scoutsSearch);
+                        agent.addBehaviour(harvestersMovement);
                         reply.setPerformative(ACLMessage.AGREE);
                         break; 
                     }
