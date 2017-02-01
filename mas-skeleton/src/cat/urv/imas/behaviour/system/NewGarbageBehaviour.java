@@ -44,6 +44,9 @@ public class NewGarbageBehaviour extends OneShotBehaviour {
         SystemAgent agent = (SystemAgent)this.getAgent();
         GameSettings game = agent.getGame();
         
+        // update buildings clock, for statistics purposes
+        this.updateBuildingsCurrentStep(game);
+        
         double newGarbageProbability = this.overrideNewGarbageProbability;
         if (this.overrideNewGarbageProbability < 0.0) {
             // normalize game settings probability (original range [0, 100])
@@ -100,5 +103,19 @@ public class NewGarbageBehaviour extends OneShotBehaviour {
         }
         
         return emptyBuildings;
+    }
+    
+    private void updateBuildingsCurrentStep(GameSettings game) {
+        Cell[][] map = game.getMap();
+        int rows = map.length, cols = map[0].length;
+
+        for (int row = 0 ; row < rows ; ++row) {
+            for (int col = 0 ; col < cols ; ++col) {
+                if ( map[row][col].getCellType() == CellType.BUILDING ) {
+                    SettableBuildingCell building = (SettableBuildingCell) map[row][col];
+                    building.setCurrentStep(game.getCurrentSimulationSteps());
+                }
+            }
+        }    
     }
 }

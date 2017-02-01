@@ -20,6 +20,8 @@ package cat.urv.imas.map;
 import cat.urv.imas.gui.CellVisualizer;
 import cat.urv.imas.onthology.GarbageType;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -43,6 +45,19 @@ public class BuildingCell extends Cell {
      */
     protected boolean found = false;
     
+    // counters for statistics
+    // current counters
+    protected int currentStep = -1;
+    protected int creationStep = -1;
+    protected int discoveryStep = -1;
+    protected int startCollectionStep = -1;
+    protected int collectedGarbage = -1;
+    // history counter
+    protected List<Integer> creationStepHistory = new LinkedList<>();
+    protected List<Integer> discoveryStepHistory = new LinkedList<>();
+    protected List<Integer> startCollectionStepHistory = new LinkedList<>();
+    protected List<Integer> collectedGarbageHistory = new LinkedList<>();       
+    
     /**
      * Builds a cell corresponding to a building.
      *
@@ -59,7 +74,15 @@ public class BuildingCell extends Cell {
      * @return the garbage on it.
      */
     public Map<GarbageType, Integer> detectGarbage() {
+        boolean previous_found = found;        
         found = (!garbage.isEmpty());
+        
+        if (!previous_found && found) {
+            // garbage detected
+            discoveryStep = currentStep;
+            discoveryStepHistory.add(discoveryStep);
+        }
+            
         return garbage;
     }
 
@@ -80,13 +103,25 @@ public class BuildingCell extends Cell {
      */
     public void removeGarbage() {
         if (found && garbage.size() > 0) {
+            ++collectedGarbage;
+            
             for (Map.Entry<GarbageType, Integer> entry: garbage.entrySet()) {
                 if (entry.getValue() == 1) {
                     garbage.clear();
                     found = false;
+                    
+                    // garbage finally collected
+                    collectedGarbageHistory.add(collectedGarbage);
+                    
                 } else {
                     garbage.replace(entry.getKey(), entry.getValue()-1);
                 }
+            }
+            
+            // first garbage being collected            
+            if (startCollectionStep < 0) {
+                startCollectionStep = currentStep;
+                startCollectionStepHistory.add(startCollectionStep);
             }
         }
     }

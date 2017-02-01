@@ -18,6 +18,7 @@
 package cat.urv.imas.map;
 
 import cat.urv.imas.onthology.GarbageType;
+import java.util.List;
 
 /**
  * Building cell API for System agent which allows to set new garbage in buildings.
@@ -34,10 +35,54 @@ public class SettableBuildingCell extends BuildingCell {
         if (!garbage.isEmpty()) {
             throw new IllegalStateException("This building (" + this.getRow() + "," + this.getCol() + ") has garbage yet: " + this.getMapMessage());
         }
+        // reset counters
+        creationStep = currentStep;
+        creationStepHistory.add(creationStep);
+        
+        discoveryStep = -1;
+        startCollectionStep = -1;
+        collectedGarbage = 0;
+
         garbage.put(type, amount);
+    }
+
+    public List<Integer> getCreationStepHistory() {
+        return creationStepHistory;
+    }
+
+    public List<Integer> getDiscoveryStepHistory() {
+        return discoveryStepHistory;
+    }
+
+    public List<Integer> getStartCollectionStepHistory() {
+        return startCollectionStepHistory;
+    }
+
+    public List<Integer> getCollectedGarbageHistory() {
+        return collectedGarbageHistory;
     }
     
     public Boolean isEmpty() {
         return garbage.isEmpty();
+    }
+
+    public int getCreationStep() {
+        return creationStep;
+    }
+
+    public int getDiscoveryStep() {
+        return discoveryStep;
+    }
+
+    public int getStartCollectionStep() {
+        return startCollectionStep;
+    }
+
+    public int getCurrentStep() {
+        return currentStep;
+    }
+
+    public void setCurrentStep(int currentStep) {
+        this.currentStep = currentStep;
     }
 }
