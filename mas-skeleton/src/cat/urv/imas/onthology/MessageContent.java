@@ -37,6 +37,7 @@ public class MessageContent {
      * BuildingCells with garbage.
      */
     public static final String GET_GARBAGE = "Get garbage";
+    public static final String DO_STEP = "Do step";
     
     /**
      * Message sent from Scout Coordinator agent to Scout agent to get the
@@ -44,6 +45,8 @@ public class MessageContent {
      */
     public static final String GET_SCOUT_STEPS = "Get scout steps";
     public static final String GET_SCOUT_STEPS_REPLY = "Get scout steps";
+    public static final String GET_HARVESTER_STEPS = "Get scout steps";
+    public static final String GET_HARVESTER_STEPS_REPLY = "Get scout steps";
     
     public static final String GARBAGE_FOUND = "Garbage found";
     public static final String HARVESTERS_FINISH = "Harvester Finish";

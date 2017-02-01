@@ -51,17 +51,12 @@ public class HarvesterAgent extends ImasAgent{
                 typesStr += " " + garbageType.getShortString();
             }
             log("At (" + position.getRow() + " , " + position.getCol() + ") accepting types:" + typesStr);
-        
-            
-            
             
             //INICIO DARIO
             // Register the service
             String serviceName = this.getLocalName();
             String serviceType = AgentType.HARVESTER.toString();
-                    
-                    
-                    
+
             try {
                 
                 DFAgentDescription dfd = new DFAgentDescription();

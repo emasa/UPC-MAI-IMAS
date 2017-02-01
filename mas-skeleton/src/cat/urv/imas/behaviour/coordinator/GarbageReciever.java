@@ -65,13 +65,18 @@ public class GarbageReciever extends AchieveREResponder {
                     case MessageContent.NEW_STEP:
                         agent.log("Recieved from System agent new simulation step");
                         agent.setScoutsFinished(false);
-                        // agent.setHarvestersFinished(false);
+                        agent.setHarvestersFinished(false);
 
-                        // TODO: WARNING setear harvesters finished a FALSE cuando
-                        // se tenga todo el ciclo
+                        agent.addBehaviour(new RequesterBehaviour(agent, agent.createNewScoutStepRequest()));
+                        agent.addBehaviour(new RequesterBehaviour(agent, agent.createNewHarvesterStepRequest()));
+                        reply.setPerformative(ACLMessage.AGREE);
+                        break;
+                    case MessageContent.HARVESTERS_FINISH:
+                        agent.log("Recieved from Harvester Coordinator ");
                         agent.setHarvestersFinished(true);                        
-
-                        agent.addBehaviour(new RequesterBehaviour(agent, agent.createNewStepRequest()));                        
+                        if (agent.getScoutsFinished() && agent.getHarvestersFinished()) {
+                            agent.addBehaviour(new RequesterBehaviour(agent, agent.createStepFinished()));
+                        }
                         reply.setPerformative(ACLMessage.AGREE);
                         break;
                 }

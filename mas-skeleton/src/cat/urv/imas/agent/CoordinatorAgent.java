@@ -144,17 +144,17 @@ public class CoordinatorAgent extends ImasAgent {
         this.scoutCoordinatorAgent = UtilsAgents.searchAgent(this, searchCriterion);
         
         // Start ContractNet message
-        ACLMessage gameRequest = new ACLMessage(ACLMessage.REQUEST);
-        gameRequest.clearAllReceiver();
-        gameRequest.addReceiver(this.systemAgent);
-        gameRequest.setProtocol(InteractionProtocol.FIPA_REQUEST);
-        log("Request message to agent");
-        try {
-            gameRequest.setContent(MessageContent.GET_MAP);
-            log("Request message content:" + gameRequest.getContent());
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+//        ACLMessage gameRequest = new ACLMessage(ACLMessage.REQUEST);
+//        gameRequest.clearAllReceiver();
+//        gameRequest.addReceiver(this.systemAgent);
+//        gameRequest.setProtocol(InteractionProtocol.FIPA_REQUEST);
+//        log("Request message to agent");
+//        try {
+//            gameRequest.setContent(MessageContent.GET_MAP);
+//            log("Request message content:" + gameRequest.getContent());
+//        } catch (Exception e) {
+//            e.printStackTrace();
+//        }
 
         MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
         this.addBehaviour(new GarbageReciever(this, mt));
@@ -168,9 +168,9 @@ public class CoordinatorAgent extends ImasAgent {
         addBehaviour(new InitialInformToHarvesterCoordinatorAgentBehaviour(this));
     
         // comento esta linea, porque en este punto el coordinator ya debe tener seteada esa variable.
-         this.setGame(InitialGameSettings.load("game.settings"));
+//         this.setGame(InitialGameSettings.load("game.settings"));
         
-        log("Initial configuration settings loaded");
+//        log("Initial configuration settings loaded");
         //FIN DARIO
     }
 
@@ -324,7 +324,28 @@ public class CoordinatorAgent extends ImasAgent {
         return gameRequest;
     }
     
-    public ACLMessage createNewStepRequest() {
+    public ACLMessage createNewHarvesterStepRequest() {
+    
+        ACLMessage stepsRequest = new ACLMessage(ACLMessage.REQUEST);
+        stepsRequest.clearAllReceiver();
+        stepsRequest.addReceiver(this.getHarvesterCoordinatorAgent());
+        stepsRequest.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);        
+     
+        try {
+            MessageWrapper wrapper = new MessageWrapper();
+            wrapper.setType(MessageContent.GET_HARVESTER_STEPS);
+            wrapper.setObject(this.getGame());
+            stepsRequest.setContentObject(wrapper);
+
+            log("Request message to harvester Coordinator content:" + wrapper.getType());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+       
+        return stepsRequest;
+    }
+    
+    public ACLMessage createNewScoutStepRequest() {
     
         ACLMessage stepsRequest = new ACLMessage(ACLMessage.REQUEST);
         stepsRequest.clearAllReceiver();

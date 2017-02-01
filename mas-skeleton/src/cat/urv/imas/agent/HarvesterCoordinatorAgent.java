@@ -30,6 +30,7 @@ import java.util.logging.Logger;
 import java.util.ArrayList;
 import static cat.urv.imas.agent.ImasAgent.OWNER;
 import cat.urv.imas.behaviour.harvestercoordinator.PathFinderBehaviour;
+import cat.urv.imas.behaviour.harvestercoordinator.StepsResponseBehaviour;
 import cat.urv.imas.map.StreetCell;
 import jade.lang.acl.MessageTemplate;
 import jade.proto.ContractNetResponder;
@@ -54,6 +55,7 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
     private GameSettings game = null;
     
     private Map<AID,SettableBuildingCell> harvesterGarbageBuilding = new HashMap<>();
+    private AID CoordinatorAgent;
 
        
     public Map<AID, SettableBuildingCell> getHarvesterGarbageBuilding() {
@@ -129,6 +131,14 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         this.SettableBuildingCellList.add(e);
     }
 
+    public AID getCoordinatorAgent() {
+        return CoordinatorAgent;
+    }
+
+    public void setCoordinatorAgent(AID CoordinatorAgent) {
+        this.CoordinatorAgent = CoordinatorAgent;
+    }
+
     
     
     public ArrayList<SettableBuildingCell> getSettableBuildingCellList() {
@@ -179,10 +189,6 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
     public HarvesterCoordinatorAgent() {
         super(AgentType.HARVESTER_COORDINATOR);
     }
-
-    
-    
-    
     
     @Override
     protected void setup() {
@@ -210,14 +216,35 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         Object[] args = getArguments();
         if (args != null && args.length > 0) {
             this.game = (GameSettings) args[0];
+            if (getHarvesterGarbagePaths().isEmpty()) {
+                log("Setup initial empty paths");
+
+                Map<AID, List<StreetCell>> harvesterGarbagePaths = new HashMap<>();
+
+                List<Cell> harvesterCells = game.getAgentList().get(AgentType.HARVESTER);
+                for (int i = 0; i < harvesterCells.size(); i++) {
+                    StreetCell harvesterCell = (StreetCell) harvesterCells.get(i);
+                    AID harvester = harvesterCell.getAgent().getAID();
+                    harvesterGarbagePaths.put(harvester, new ArrayList<StreetCell>());
+                }
+                setHarvesterGarbagePaths(harvesterGarbagePaths);
+            }
         } else {
             // Make the agent terminate immediately
             doDelete();
         }
         
         log("Creatad new Harvester Coordinator: " + getLocalName());
-
-        //Behaviours
+        
+        // search CoordinatorAgent
+        ServiceDescription searchCriterion = new ServiceDescription();
+        searchCriterion.setType(AgentType.COORDINATOR.toString());
+        this.CoordinatorAgent = UtilsAgents.searchAgent(this, searchCriterion);
+        
+        // add behaviours
+        // we wait for the initialization of the game
+        MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+        this.addBehaviour(new StepsResponseBehaviour(this, mt));
         addBehaviour(new SearchHarvesterBehaviour(this));
         addBehaviour(new ReceiveInfoBehaviour(this));
         addBehaviour(new CoalitionBehaviour(this));
@@ -285,9 +312,65 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
                 System.out.println("5. " + getLocalName() + ": Proposal:" + reject.getConversationId() + " rejected");
             }
         });
-                
-  		
-	
+    }
+    
+    public ACLMessage createMovementDone() {
+        ACLMessage sendGarbageRequest = new ACLMessage(ACLMessage.REQUEST);
+        sendGarbageRequest.clearAllReceiver();
+        sendGarbageRequest.addReceiver(this.getCoordinatorAgent());
+        sendGarbageRequest.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);        
+     
+        try {
+            MessageWrapper wrapper = new MessageWrapper();
+            wrapper.setType(MessageContent.GET_HARVESTER_STEPS_REPLY);
+            sendGarbageRequest.setContentObject(wrapper);
+
+            log("Notify to coordinator step finished");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+       
+        return sendGarbageRequest;
+    }
+    
+    public Map<String,StreetCell> getNextPosition(AID harvester) {
+        Map<String,StreetCell> message = new HashMap<>();
+        ArrayList<StreetCell> path = (ArrayList<StreetCell>) this.getHarvesterGarbagePaths().get(harvester);
+        ArrayList<StreetCell> path2 = (ArrayList<StreetCell>) this.getHarvesterRecyclePaths().get(harvester);
+        if(path.isEmpty()){
+            if(this.harvesterGarbageBuilding.get(harvester) != null){
+                // Harvest garbage
+                StreetCell nextPosition = path2.get(0);
+                if(!nextPosition.isThereAnAgent()){
+//                    TODO: path2.remove(0);
+                    message.put("havest", nextPosition);
+                }else
+                    message.put("wait", null);
+            }else{
+                if(!path2.isEmpty()){
+                    // Go to recycle center
+                    StreetCell nextPosition = path2.get(0);
+                    if(!nextPosition.isThereAnAgent()){
+                        message.put("Recycle", nextPosition);
+                    }else
+                        message.put("wait", null);
+                }else{
+                    // you arrive
+                    message.put("Recycle",null);
+                }
+            }
+        }else{
+            StreetCell nextPosition = path.get(0);
+            if(!nextPosition.isThereAnAgent()){
+                path.remove(0);
+                if(path.isEmpty())
+                    message.put("destination", nextPosition);
+                else
+                    message.put("movement", nextPosition);
+            }else
+                message.put("wait", null);
+        }
+        return message;
     }
 
     public GameSettings getGame() {
@@ -339,7 +422,7 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
                         MessageWrapper message = (MessageWrapper) msg.getContentObject();
                         switch (message.getType()) {
                             case MessageContent.SEND_GAME:
-                                agent.setGame((GameSettings) message.getObject());
+//                                agent.setGame((GameSettings) message.getObject());
                                 //System.out.println(" Message Object Received " + " <----------- " + message.getType());
                                 //Populate RecyclingCenter list
                                 try {
