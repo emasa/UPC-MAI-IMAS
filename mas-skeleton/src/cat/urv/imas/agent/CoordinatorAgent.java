@@ -17,22 +17,27 @@
  */
 package cat.urv.imas.agent;
 
+import cat.urv.imas.behaviour.coordinator.GarbageReciever;
 import cat.urv.imas.onthology.GameSettings;
 import cat.urv.imas.behaviour.coordinator.RequesterBehaviour;
+import cat.urv.imas.onthology.InitialGameSettings;
 import cat.urv.imas.onthology.MessageContent;
+import cat.urv.imas.onthology.MessageWrapper;
 import cat.urv.imas.map.BuildingCell;
 import cat.urv.imas.map.SettableBuildingCell;
 import cat.urv.imas.onthology.GarbageType;
+import cat.urv.imas.onthology.MessageWrapper;
 
 import jade.core.*;
+import jade.core.behaviours.OneShotBehaviour;
 import jade.domain.*;
 import jade.proto.ContractNetInitiator;
 import jade.domain.FIPAAgentManagement.*;
 import jade.domain.FIPANames.InteractionProtocol;
 import jade.lang.acl.*;
 import java.io.IOException;
+import java.util.concurrent.TimeUnit;
 import java.util.ArrayList;
-
 import java.util.Date;
 import java.util.Vector;
 import java.util.Enumeration;
@@ -50,6 +55,14 @@ public class CoordinatorAgent extends ImasAgent {
      * Game settings in use.
      */
     private GameSettings game;
+
+    public GameSettings getGame() {
+        return game;
+    }
+
+    public void setGame(GameSettings game) {
+        this.game = game;
+    }
     /**
      * System agent id.
      */
@@ -69,11 +82,17 @@ public class CoordinatorAgent extends ImasAgent {
     
     ArrayList<BuildingCell> garbageCollecting = new ArrayList<>();
 
+    private boolean scoutsFinished = false;
+    private boolean harvestersFinished = false;
+
     /**
      * Builds the coordinator agent.
      */
     public CoordinatorAgent() {
         super(AgentType.COORDINATOR);
+        garbageFound = new ArrayList<>();
+        garbageCollected = new ArrayList<>();
+        garbageCollecting = new ArrayList<>();   
     }
 
     /**
@@ -103,11 +122,20 @@ public class CoordinatorAgent extends ImasAgent {
             System.err.println(getLocalName() + " registration with DF unsucceeded. Reason: " + e.getMessage());
             doDelete();
         }
-       
+
+        Object[] args = getArguments();
+        if (args != null && args.length > 0) {
+            this.game = (GameSettings) args[0];
+        } else {
+            // Make the agent terminate immediately
+            doDelete();
+        }        
+        
         // search SystemAgent
         ServiceDescription searchCriterion = new ServiceDescription();
         searchCriterion.setType(AgentType.SYSTEM.toString());
         this.systemAgent = UtilsAgents.searchAgent(this, searchCriterion);
+
         // searchAgent is a blocking method, so we will obtain always a correct AID
 
         /* ********************************************************************/
@@ -127,106 +155,95 @@ public class CoordinatorAgent extends ImasAgent {
         } catch (Exception e) {
             e.printStackTrace();
         }
-        
-        //we add a behaviour that sends the message and waits for an answer
-        this.addBehaviour(new RequesterBehaviour(this, gameRequest));
+
+        MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
+        this.addBehaviour(new GarbageReciever(this, mt));
         // setup finished. When we receive the last inform, the agent itself will add
         // a behaviour to send/receive actions
         
         /* ********************************************************************/
-//        // contract net system
-//        ServiceDescription searchHC = new ServiceDescription();     
-//        searchHC.setType(AgentType.HARVESTER_COORDINATOR.toString());
-//        this.hcAgent = UtilsAgents.searchAgent(this, searchHC);    
-//        
-//        // TODO: CHANGE THIS FOR GARBAGE LIST
-//        ////////////// Dummy SettableBuildingCell 
-//        SettableBuildingCell celda = new SettableBuildingCell(0, 1);
-//        celda.setGarbage(GarbageType.PAPER, 2);
-//        ///////////////
-//        
-//        // Fill the CFP message
-//        ACLMessage contract = new ACLMessage(ACLMessage.CFP);
-//        contract.addReceiver(this.hcAgent);
-//        contract.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);
-//        // We want to receive a reply in 10 secs
-//        contract.setReplyByDate(new Date(System.currentTimeMillis() + 10000));
-//        contract.setConversationId("C:dummy");
-//        
-//        try {
-//            contract.setContentObject(celda);
-//        } catch (IOException ex) {
-//            Logger.getLogger(CoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
-//        }
-//        log("ContractNet Started");
-//        String content = celda.getMapMessage()+" in R"+celda.getRow()+" C"+celda.getCol();
-//        System.out.println("1. "+getLocalName()+": sent contract "+contract.getConversationId());
-//        
-//        this.addBehaviour(new ContractNetInitiator(this, contract) {			
-//            @Override
-//            protected void handlePropose(ACLMessage propose, Vector v) {
-//                // Receive Proposal
-//                System.out.println("3. "+propose.getSender().getName()+": proposed a coalition on "+propose.getConversationId());
-//            }
-//
-//            @Override
-//            protected void handleRefuse(ACLMessage refuse) {
-//                System.out.println("3. "+refuse.getSender().getName()+": refused "+refuse.getConversationId());
-//            }
-//
-//            @Override
-//            protected void handleFailure(ACLMessage failure) {
-//                if (failure.getSender().equals(myAgent.getAMS())) {
-//                    // FAILURE notification from the JADE runtime: the receiver
-//                    // does not exist
-//                    System.out.println("Responder does not exist");
-//                }
-//                else {
-//                    System.out.println("Agent "+failure.getSender().getName()+" failed "+failure.getConversationId());
-//                }
-//            }
-//
-//            @Override
-//            protected void handleAllResponses(Vector responses, Vector acceptances) {
-//                // Accept Proposal. CA always accepts proposal
-//                Enumeration e = responses.elements();
-//                while (e.hasMoreElements()) {
-//                    ACLMessage proposal = (ACLMessage) e.nextElement();                    
-//                    ACLMessage accept = proposal.createReply();
-//                    accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
-//                    acceptances.addElement(accept);
-//                    accept.setContent(proposal.getContent()); 
-//                    System.out.println("4. "+getLocalName()+": accepted proposal "+proposal.getContent() + " for "+ proposal.getConversationId());
-//                }             
-//            }
-//                        
-//            @Override
-//            protected void handleInform(ACLMessage inform) {
-//                System.out.println("8. "+inform.getSender().getName()+": successfully performed "+inform.getConversationId());
-//            }
-//        });
-        /* ********************************************************************/
+
+        //INICIO DARIO
+        //Add behaviour to inform basic info about game
+        addBehaviour(new InitialInformToHarvesterCoordinatorAgentBehaviour(this));
+    
+        // comento esta linea, porque en este punto el coordinator ya debe tener seteada esa variable.
+         this.setGame(InitialGameSettings.load("game.settings"));
         
+        log("Initial configuration settings loaded");
+        //FIN DARIO
     }
 
-    /**
-     * Update the game settings.
-     *
-     * @param game current game settings.
-     */
-    public void setGame(GameSettings game) {
-        this.game = game;
-    }
+    
+    
+    
+    //INICIO DARIO
+    public class InitialInformToHarvesterCoordinatorAgentBehaviour extends OneShotBehaviour {
+        
+        public InitialInformToHarvesterCoordinatorAgentBehaviour(CoordinatorAgent agent) {
+            super(agent);
+        }
+        
+        @Override
+        public void action() {
+                       
+            CoordinatorAgent agent = (CoordinatorAgent)this.getAgent();
+            //Delay the search in DF
+            try {
+                TimeUnit.SECONDS.sleep(2);
+            } catch (InterruptedException ex) {
+                Logger.getLogger(HarvesterCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
+            }
+            
+            // Search for services of name "HARVESTERCOORDINATOR"
+            String serviceType = AgentType.HARVESTER_COORDINATOR.toString();
+            
+            System.out.println("Agent "+getLocalName()+" searching for services of type "+serviceType);
+            try {
+                // Build the description used as template for the search
+                DFAgentDescription template = new DFAgentDescription();
+                ServiceDescription templateSd = new ServiceDescription();
+                templateSd.setType(serviceType);
+                template.addServices(templateSd);
+  		
+                SearchConstraints sc = new SearchConstraints();
+                // We want to receive 10 results at most
+                sc.setMaxResults(new Long(10));
+  	
+                DFAgentDescription[] results = DFService.search(CoordinatorAgent.this, template, sc);
+                
+                if (results.length > 0) {
+                    System.out.println("Agent "+getAID().getLocalName()+" found the service type " + serviceType );
+                    for (int i = 0; i < results.length; ++i) {
+  			DFAgentDescription dfd = results[i];
+  			AID provider = dfd.getName();
+  	
+                        MessageWrapper message = new MessageWrapper();
+                        message.setType(MessageContent.SEND_GAME);
+                        message.setObject(agent.getGame());
+                        ACLMessage msg = new ACLMessage( ACLMessage.INFORM );
+                        msg.setContentObject(message);
+        
+                        msg.clearAllReceiver();
+                        msg.addReceiver(provider);
 
-    /**
-     * Gets the current game settings.
-     *
-     * @return the current game settings.
-     */
-    public GameSettings getGame() {
-        return this.game;
+                        send(msg);
+                    }
+                }	
+                else {
+                    System.out.println("Agent "+getLocalName()+" did not find any "+serviceType+ " service");
+                }
+            
+            }
+            catch (FIPAException fe) {
+  		fe.printStackTrace();
+            } catch (IOException ex) {
+                Logger.getLogger(CoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
+            }
+        }
     }
-
+    //FIN DARIO
+    
     public AID getScoutCoordinatorAgent() {
         return scoutCoordinatorAgent;
     }
@@ -285,6 +302,83 @@ public class CoordinatorAgent extends ImasAgent {
     
     public void addGarbageCollected(BuildingCell garbageCollected) {
         this.garbageCollecting.add(garbageCollected);
+    }
+    
+    public ACLMessage createGameRequest() {
+
+        ACLMessage gameRequest = new ACLMessage(ACLMessage.REQUEST);
+        gameRequest.clearAllReceiver();
+        gameRequest.addReceiver(this.systemAgent);
+        gameRequest.setProtocol(InteractionProtocol.FIPA_REQUEST);
+        log("Request message to system");
+        try {
+            MessageWrapper wrapper = new MessageWrapper();
+            wrapper.setType(MessageContent.GET_MAP);
+            gameRequest.setContentObject(wrapper);
+
+            log("Request message content:" + wrapper.getType());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+    
+        return gameRequest;
+    }
+    
+    public ACLMessage createNewStepRequest() {
+    
+        ACLMessage stepsRequest = new ACLMessage(ACLMessage.REQUEST);
+        stepsRequest.clearAllReceiver();
+        stepsRequest.addReceiver(this.getScoutCoordinatorAgent());
+        stepsRequest.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);        
+     
+        try {
+            MessageWrapper wrapper = new MessageWrapper();
+            wrapper.setType(MessageContent.GET_SCOUT_STEPS);
+            wrapper.setObject(this.getGame());
+            stepsRequest.setContentObject(wrapper);
+
+            log("Request message to Scout Coordinator content:" + wrapper.getType());
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+       
+        return stepsRequest;
+    }
+
+    public ACLMessage createStepFinished() {
+        ACLMessage stepsRequest = new ACLMessage(ACLMessage.REQUEST);
+        stepsRequest.clearAllReceiver();
+        stepsRequest.addReceiver(this.getSystemAgent());
+        stepsRequest.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);        
+     
+        try {
+            MessageWrapper wrapper = new MessageWrapper();
+            wrapper.setType(MessageContent.STEP_FINISHED);
+            stepsRequest.setContentObject(wrapper);
+
+            log("Notify to system step finished");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+       
+        return stepsRequest;
+
+    }
+
+    public void setScoutsFinished(boolean scoutsFinished) {
+        this.scoutsFinished = scoutsFinished;
+    }
+
+    public boolean getScoutsFinished() {
+        return scoutsFinished;
+    }
+
+    public boolean getHarvestersFinished() {
+        return harvestersFinished;
+    }
+
+    public void setHarvestersFinished(boolean harvestersFinished) {
+        this.harvestersFinished = harvestersFinished;
     }
     
 }

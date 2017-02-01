@@ -18,6 +18,7 @@
 package cat.urv.imas.map;
 
 import cat.urv.imas.gui.CellVisualizer;
+import cat.urv.imas.onthology.GarbageType;
 
 /**
  * Cell that represents a recycling center.
@@ -28,6 +29,9 @@ public class RecyclingCenterCell extends Cell {
      * Prices of recycling plastic, glass and paper, respectively.
      */
     private final int[] prices;
+    
+    private Integer[] recycledGarbageUnits = new Integer[] {0, 0, 0};
+    
 
     /**
      * Initializes a cell with a hospital.
@@ -52,4 +56,25 @@ public class RecyclingCenterCell extends Cell {
         return prices[0] + "/" + prices[1] + "/" + prices[2];
     }
     
+    public void recycleGarbage(GarbageType type) {
+        if (null != type) switch (type) {
+            case PLASTIC:
+                ++recycledGarbageUnits[0];
+                break;
+            case GLASS:
+                ++recycledGarbageUnits[1];        
+                break;
+            case PAPER:
+                ++recycledGarbageUnits[2];
+                break;
+            default:
+                break;
+        }
+    }
+        
+    public Integer[] getPoints() {
+        return new Integer[] {prices[0] * recycledGarbageUnits[0], 
+                              prices[1] * recycledGarbageUnits[1], 
+                              prices[2] * recycledGarbageUnits[2]};
+    }
 }

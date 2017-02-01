@@ -11,6 +11,8 @@ import cat.urv.imas.map.BuildingCell;
 import cat.urv.imas.map.Cell;
 import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.GameSettings;
+import cat.urv.imas.onthology.MessageContent;
+import cat.urv.imas.onthology.MessageWrapper;
 import jade.core.AID;
 import jade.domain.DFService;
 import jade.domain.FIPAAgentManagement.DFAgentDescription;
@@ -73,6 +75,14 @@ public class ScoutCoordinatorAgent extends ImasAgent{
             System.err.println(getLocalName() + " registration with DF unsucceeded. Reason: " + e.getMessage());
             doDelete();
         }
+
+        Object[] args = getArguments();
+        if (args != null && args.length > 0) {
+            this.game = (GameSettings) args[0];
+        } else {
+            // Make the agent terminate immediately
+            doDelete();
+        }
         
         // search CoordinatorAgent
         ServiceDescription searchCriterion = new ServiceDescription();
@@ -82,7 +92,6 @@ public class ScoutCoordinatorAgent extends ImasAgent{
         // add behaviours
         // we wait for the initialization of the game
         MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
-
         this.addBehaviour(new StepsResponseBehaviour(this, mt));
     }
     
@@ -161,4 +170,26 @@ public class ScoutCoordinatorAgent extends ImasAgent{
         this.garbageBuildings.addAll(garbageBuildings);
     }
 
+    public ACLMessage createSendGarbage() {
+        ACLMessage sendGarbageRequest = new ACLMessage(ACLMessage.REQUEST);
+        sendGarbageRequest.clearAllReceiver();
+        sendGarbageRequest.addReceiver(this.getCoordinatorAgent());
+        sendGarbageRequest.setProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST);        
+     
+        try {
+            MessageWrapper wrapper = new MessageWrapper();
+            wrapper.setType(MessageContent.GARBAGE_FOUND);
+            wrapper.setObject(this.getGarbageBuildings());
+            sendGarbageRequest.setContentObject(wrapper);
+
+            log("Notify to coordinator step finished");
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+       
+        return sendGarbageRequest;
+
+    }
+    
+    
 }

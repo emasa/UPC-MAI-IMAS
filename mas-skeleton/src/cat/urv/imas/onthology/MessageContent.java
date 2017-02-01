@@ -27,7 +27,11 @@ public class MessageContent {
      * city information.
      */
     public static final String GET_MAP = "Get map";
+    public static final String SEND_GAME = "Game";
+    public static final String SETTABLE_BUILDING = "Settable Building";
+    public static final String GARBAGE_TYPES = "GarbageTypes";
     
+    public static final String GET_MAP_REPLY = "Get map reply";    
     /**
      * Message sent from Scout Coordinator agent to Scout agent to get the
      * BuildingCells with garbage.
@@ -39,11 +43,18 @@ public class MessageContent {
      * BuildingCells with garbage.
      */
     public static final String GET_SCOUT_STEPS = "Get scout steps";
+    public static final String GET_SCOUT_STEPS_REPLY = "Get scout steps";
+    
+    public static final String GARBAGE_FOUND = "Garbage found";
+    public static final String HARVESTERS_FINISH = "Harvester Finish";
     
     /**
      * Message sent from Scout Coordinator agent to Scout agent to get the
      * BuildingCells with garbage.
      */
     public static final String NEW_CELL = "New cell";
+    
+    public static final String NEW_STEP = "New Step";    
+    public static final String STEP_FINISHED = "Step Finished";
     
 }
