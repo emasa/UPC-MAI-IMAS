@@ -174,7 +174,7 @@ public class CoordinatorAgent extends ImasAgent {
                 
 //                ArrayList<BuildingCell> SettableBuildingCellList = agent.getGarbageFound();
                 
-                ArrayList<SettableBuildingCell> SettableBuildingCellList = new ArrayList<>();
+                ArrayList<BuildingCell> SettableBuildingCellList = new ArrayList<>();
                       
                 SettableBuildingCell g1 = new SettableBuildingCell(3,3);
                 g1.setGarbage(GarbageType.PAPER, 10);
@@ -185,6 +185,7 @@ public class CoordinatorAgent extends ImasAgent {
                 SettableBuildingCellList.add(g1);
                 SettableBuildingCellList.add(g2);
                 SettableBuildingCellList.add(g3);
+                addGarbageFound(SettableBuildingCellList);
                 
 //                ArrayList<BuildingCell> garbageBuildings = (ArrayList<BuildingCell>) msg.getContentObject();
 //                agent.addGarbageFound(garbageBuildings);

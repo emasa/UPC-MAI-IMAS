@@ -259,10 +259,6 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         addBehaviour(new CoalitionBehaviour(this));
         addBehaviour(new StartGraphBehaviour(this));
         addBehaviour(new CheckEmptyBuildingBehaviour(this));
-          
-        //Esto no deberia estar aca, pero dentro del behaviour cyclico que 
-        //escucha, captura los mensajes del contract net y no he podido filtrarlos
-        //con exito.
         
         
         /* ********************************************************************/    

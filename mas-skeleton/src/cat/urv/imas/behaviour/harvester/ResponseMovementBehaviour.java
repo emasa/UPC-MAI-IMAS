@@ -113,7 +113,9 @@ public class ResponseMovementBehaviour extends AchieveREResponder {
     private void execute(HarvesterAgent agent, StreetCell nextPosition) {
         try {
             StreetCell currentPos = agent.getPosition();
+            currentPos = (StreetCell) agent.getGame().get(currentPos.getRow(), currentPos.getCol());
             InfoAgent HarvesterInfo = currentPos.getAgent();
+            nextPosition = (StreetCell) agent.getGame().get(nextPosition.getRow(), nextPosition.getCol());
             // update the position
             currentPos.removeAgent(HarvesterInfo);
             nextPosition.addAgent(HarvesterInfo);

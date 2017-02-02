@@ -44,7 +44,7 @@ public class HarvesterAgent extends ImasAgent{
         if (args != null && args.length > 1) {
             //position = (Cell) args[0];
             garbageTypes = (GarbageType[]) args[1]; 
-            
+            this.game = (GameSettings) args[2];
             String typesStr = "";
             for (GarbageType garbageType : garbageTypes) {
                 typesStr += " " + garbageType.getShortString();
