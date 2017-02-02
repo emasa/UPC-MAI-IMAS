@@ -45,15 +45,10 @@ public class HarvesterAgent extends ImasAgent{
             //position = (Cell) args[0];
             garbageTypes = (GarbageType[]) args[1]; 
             
-            position = (StreetCell) args[0];
-            
-            position.getAgent().setAID(getAID());
-            
             String typesStr = "";
             for (GarbageType garbageType : garbageTypes) {
                 typesStr += " " + garbageType.getShortString();
             }
-            log("At (" + position.getRow() + " , " + position.getCol() + ") accepting types:" + typesStr);
             
             //INICIO DARIO
             // Register the service
@@ -79,6 +74,11 @@ public class HarvesterAgent extends ImasAgent{
   		
   		DFService.register(this, dfd);
                 System.out.println("Agent "+getLocalName()+" registering service \""+serviceName+"\" of type "+serviceType);
+                
+                position = (StreetCell) args[0];
+                position.getAgent().setAID(getAID());
+
+                log(getAID()+"At (" + position.getRow() + " , " + position.getCol() + ") accepting types:" + typesStr);
   	
             }
             catch (FIPAException e) {

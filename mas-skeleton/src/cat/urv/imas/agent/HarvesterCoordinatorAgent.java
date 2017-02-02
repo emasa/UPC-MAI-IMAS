@@ -482,7 +482,6 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
             
             HarvesterCoordinatorAgent agent = (HarvesterCoordinatorAgent)this.getAgent();
             
-            
             //Delay the search in DF
             try {
                 TimeUnit.SECONDS.sleep(2);

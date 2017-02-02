@@ -66,7 +66,6 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                 ArrayList<String> permutations = new ArrayList<>();
                 //while (agent.SettableBuildingCellList.size()>0) {
                 while (agent.getSettableBuildingCellList().size()>0) {
-
                     
                     //Get garbage type and quantity
                     SettableBuildingCell garbage = agent.getSettableBuildingCellList().get(0);
@@ -91,9 +90,7 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                         while(itr.hasNext()) {
                             Property element = (Property) itr.next();
                             agentGarbageTypes = (String) element.getValue();
-                            
                         }
-                            
                         if (agent.getAgentStatus().get(s) == 0 && agentGarbageTypes.contains(garbageType.getShortString())) {
                             AvailableAgent.add(s);
                             System.out.println(String.valueOf(s));
@@ -101,9 +98,6 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                         
                     }
 
-                    
-                    
-                    
                     if(!AvailableAgent.isEmpty()){
                         
                         //Coalition of 1
@@ -150,12 +144,6 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                         
                         System.out.println(gX+" "+gY+"*********************************************");
                         
-                        
-                        
-                        
-                        
-                        
-                        
                         //Define index to access recycling center prices
                         int j = 0;
                         if (garbageType.getShortString().equals(GarbageType.PLASTIC.getShortString())) {
@@ -168,8 +156,6 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                             j = 2;
                         }
 
-                        
-                        
                         //Now for each element in permutations calculate Coalition Cost
                         double BestCoalitionCost = Double.NEGATIVE_INFINITY;
                         int BestRecyclingCenter = 10;
@@ -206,20 +192,17 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                                         break;
                                     }
                                 }
-
                                 
-
                                 //For each agent
                                 for (String ai : ais) {
                                     //Get agent current position
                                     String agentName = agent.getServiceDescriptionList().get(Integer.parseInt(ai)).getName();
                                     //System.out.println("agentName ::: "+agentName + " for coalition calculation.");
                                 
-                                    
                                     //CORREGIR ANGEL
-                                    aX = 1;
-                                    aY = 18;
-                                    /*
+//                                    aX = 1;
+//                                    aY = 18;
+                                    
                                     List<Cell> harvestersCells = (ArrayList<Cell>) agent.getGame().getAgentList().get(AgentType.HARVESTER);
                                     System.out.println(harvestersCells);
                                     for (int ii = 0; ii < harvestersCells.size(); ii++) {
@@ -236,9 +219,6 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                                         }
                                         
                                     }                                  
-                                    */
-                                    
-                                    
                                     
                                     
                                     //CoalitonCost update 
@@ -270,12 +250,8 @@ public class CoalitionBehaviour extends CyclicBehaviour {
 
                                 
                                 i++;
-                            
-                                
-                            
-                            }
 
-                            
+                            }
                         }
 
                     
@@ -319,9 +295,6 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                             System.out.println("Optimal Path H2G : "+agent.getHarvesterGarbagePaths().get(agent.getAIDList().get(agentI)));
                             System.out.println("Optimal Path G2R : "+agent.getHarvesterRecyclePaths().get(agent.getAIDList().get(agentI)));
                             System.out.println("Garbage in Building : "+agent.getHarvesterGarbageBuilding().get(agent.getAIDList().get(agentI)));
-                            
-                            
-                            
                         }
                         
                         for (int e : agent.getAgentStatus()){
