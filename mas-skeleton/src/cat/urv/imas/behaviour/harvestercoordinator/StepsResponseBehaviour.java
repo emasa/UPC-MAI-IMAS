@@ -91,7 +91,7 @@ public class StepsResponseBehaviour extends AchieveREResponder {
                         List<Cell> harvestersCells = agent.getGame().getAgentList().get(AgentType.HARVESTER);
                         for (int i = 0; i < harvestersCells.size(); i++) {
                             StreetCell harvesterCell = (StreetCell) harvestersCells.get(i);
-                            agent.log("New cells for scout in: " + harvesterCell);
+                            agent.log("New cells for harvester in: " + harvesterCell);
                             AID harvester = harvesterCell.getAgent().getAID();
                             HashMap<String,StreetCell> nextPosition = (HashMap<String,StreetCell>) agent.getNextPosition(harvester);
                             // TODO: work with collection and go back

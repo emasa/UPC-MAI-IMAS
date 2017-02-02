@@ -209,22 +209,16 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                                     for (int ii = 0; ii < harvestersCells.size(); ii++) {
                                         StreetCell harvesterCell = (StreetCell) harvestersCells.get(ii);
                                         InfoAgent harvester = harvesterCell.getAgent();
-                                        if(harvester != null){
-                                            AID harvesterID = harvesterCell.getAgent().getAID();
-                                        
-                                            System.out.println(harvesterCell.getAgent().getAID());
-                                            System.out.println(agentName+"*********************");
-                                            System.out.println(harvesterID.getLocalName()+"*********************");
+                                        AID harvesterID = harvesterCell.getAgent().getAID();
 
-                                            if(harvesterID.getLocalName().equals(agentName)){
-                                                aX = harvesterCell.getRow();
-                                                aY = harvesterCell.getCol();
-                                            }
-                                        }else{
-                                            aX = 1000;
-                                            aY = 1000;
+                                        System.out.println(harvesterCell.getAgent().getAID());
+                                        System.out.println(agentName+"*********************");
+                                        System.out.println(harvesterID.getLocalName()+"*********************");
+
+                                        if(harvesterID.getLocalName().equals(agentName)){
+                                            aX = harvesterCell.getRow();
+                                            aY = harvesterCell.getCol();
                                         }
-                                        
                                     }                                  
                                     
                                     
@@ -294,6 +288,10 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                             
                             
                             if(h2g != null && g2r != null){
+                                //ArrayList<StreetCell> path = (ArrayList<StreetCell>) agent.getPfb().OptimalPathToCartesianCoords(h2g);
+                                //ArrayList<StreetCell> path2 = (ArrayList<StreetCell>) agent.getPfb().OptimalPathToCartesianCoords(agent.getPfb().getOptimalPath(originNode, destinationNode));
+//                                agent.getHarvesterGarbagePaths().put(agent.getAIDList().get(agentI), path.subList(1, path.size()));
+//                                agent.getHarvesterRecyclePaths().put(agent.getAIDList().get(agentI), path2.subList(1, path2.size()));
                                 agent.getHarvesterGarbagePaths().put(agent.getAIDList().get(agentI), agent.getPfb().OptimalPathToCartesianCoords(h2g));
                                 agent.getHarvesterRecyclePaths().put(agent.getAIDList().get(agentI), agent.getPfb().OptimalPathToCartesianCoords(agent.getPfb().getOptimalPath(originNode, destinationNode)));
                                 agent.getHarvesterGarbageBuilding().put(agent.getAIDList().get(agentI), garbage);

@@ -274,9 +274,6 @@ public class PathFinderBehaviour {
             double y = Math.round(((1.0 * optimalPath.get(i) / this.cols) - x)* this.cols);
 
             lista.add(new StreetCell(x,(int)y));
-            
-            
-            
         }
         return lista;
     }

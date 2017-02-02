@@ -361,19 +361,28 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
             if(this.harvesterGarbageBuilding.get(harvester) != null){
                 // Harvest garbage
                 StreetCell nextPosition = path2.get(0);
+                nextPosition = (StreetCell) getGame().get(nextPosition.getRow(), nextPosition.getCol());
                 if(!nextPosition.isThereAnAgent()){
-//                    TODO: path2.remove(0);
-                    message.put("havest", nextPosition);
-                }else
-                    message.put("wait", null);
+//                if(nextPosition.isThereAnAgent()){
+//                    if(nextPosition.getAgent().getAID().equals(harvester)){
+    //                    TODO: path2.remove(0);
+                        message.put("harvest", nextPosition);
+                    }else
+                        message.put("wait", null);
+//                }
             }else{
                 if(!path2.isEmpty()){
                     // Go to recycle center
                     StreetCell nextPosition = path2.get(0);
+                    nextPosition = (StreetCell) getGame().get(nextPosition.getRow(), nextPosition.getCol());
                     if(!nextPosition.isThereAnAgent()){
-                        message.put("Recycle", nextPosition);
-                    }else
-                        message.put("wait", null);
+//                    if(nextPosition.isThereAnAgent()){
+//                        if(nextPosition.getAgent().getAID().equals(harvester)){
+    //                        path2.remove(0);
+                            message.put("Recycle", nextPosition);
+                        }else
+                            message.put("wait", null);
+//                    }
                 }else{
                     if(this.harvesterRecyclinCenter.get(harvester) != null){
                         // you arrive
@@ -386,14 +395,18 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
             }
         }else{
             StreetCell nextPosition = path.get(0);
+            nextPosition = (StreetCell) getGame().get(nextPosition.getRow(), nextPosition.getCol());
             if(!nextPosition.isThereAnAgent()){
-                path.remove(0);
-                if(path.isEmpty())
-                    message.put("destination", nextPosition);
-                else
-                    message.put("movement", nextPosition);
-            }else
-                message.put("wait", null);
+//            if(nextPosition.isThereAnAgent()){
+//                if(nextPosition.getAgent().getAID().equals(harvester)){
+                    path.remove(0);
+                    if(path.isEmpty())
+                        message.put("destination", nextPosition);
+                    else
+                        message.put("movement", nextPosition);
+                }else
+                    message.put("wait", null);
+//            }
         }
         this.log(message.toString());
         this.log("=========================================================");

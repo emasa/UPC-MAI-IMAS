@@ -1,1 +1,1 @@
-http://angels-macbook.home:7778/acc
+http://angels-macbook.local:7778/acc

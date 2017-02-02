@@ -39,7 +39,7 @@ public class RequestMovementBehaviour extends AchieveREInitiator {
     public RequestMovementBehaviour(HarvesterCoordinatorAgent agent, ACLMessage requestMsg) {
         super(agent, requestMsg);
         AID elem = (AID)requestMsg.getAllReceiver().next();
-        agent.log("Adjacent cells sent to Scout "+ elem.getLocalName()+".");
+//        agent.log("Adjacent cells sent to Scout "+ elem.getLocalName()+".");
     }
 
     /**
