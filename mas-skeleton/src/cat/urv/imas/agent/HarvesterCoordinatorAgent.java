@@ -217,6 +217,14 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         Object[] args = getArguments();
         if (args != null && args.length > 0) {
             this.game = (GameSettings) args[0];
+            this.clearRecyclingCenter();
+            for (Cell[] cc : this.game.getMap()) {
+                for (Cell c : cc) {
+                    if (c.getCellType().equals(CellType.RECYCLING_CENTER)) {
+                        RecyclingCenter.add(c);
+                    }
+                }
+            }
             if (getHarvesterGarbagePaths().isEmpty()) {
                 log("Setup initial empty paths");
 
@@ -247,7 +255,7 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         MessageTemplate mt = MessageTemplate.and(MessageTemplate.MatchProtocol(FIPANames.InteractionProtocol.FIPA_REQUEST), MessageTemplate.MatchPerformative(ACLMessage.REQUEST));
         this.addBehaviour(new StepsResponseBehaviour(this, mt));
         addBehaviour(new SearchHarvesterBehaviour(this));
-        addBehaviour(new ReceiveInfoBehaviour(this));
+//        addBehaviour(new ReceiveInfoBehaviour(this));
         addBehaviour(new CoalitionBehaviour(this));
         addBehaviour(new StartGraphBehaviour(this));
         addBehaviour(new CheckEmptyBuildingBehaviour(this));
@@ -326,7 +334,7 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
      
         try {
             MessageWrapper wrapper = new MessageWrapper();
-            wrapper.setType(MessageContent.GET_HARVESTER_STEPS_REPLY);
+            wrapper.setType(MessageContent.HARVESTERS_FINISH);
             sendGarbageRequest.setContentObject(wrapper);
 
             log("Notify to coordinator step finished");
@@ -403,69 +411,64 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
     
     //INICIO DARIO
     
-    
-    
-    
-    
-    
-    private class ReceiveInfoBehaviour extends CyclicBehaviour {
-
-        public ReceiveInfoBehaviour(HarvesterCoordinatorAgent agent) {
-            super(agent);
-        }
-        
-        @Override
-        public void action() {
-            
-            HarvesterCoordinatorAgent agent = (HarvesterCoordinatorAgent)this.getAgent();
-            
-            ACLMessage msg= blockingReceive(ACLMessage.INFORM);
-            if (msg!=null){
-                try {
-                    if (msg.getContentObject().getClass().equals(MessageWrapper.class)) {
-                        MessageWrapper message = (MessageWrapper) msg.getContentObject();
-                        switch (message.getType()) {
-                            case MessageContent.SEND_GAME:
-//                                agent.setGame((GameSettings) message.getObject());
-                                //System.out.println(" Message Object Received " + " <----------- " + message.getType());
-                                //Populate RecyclingCenter list
-                                try {
-                                    agent.clearRecyclingCenter();
-                                    for (Cell[] cc : agent.game.getMap()) {
-                                        for (Cell c : cc) {
-                                            if (c.getCellType().equals(CellType.RECYCLING_CENTER)) {
-                                                RecyclingCenter.add(c);
-                                            }
-                                        }
-                                    }
-                                } catch (Exception e) {
-                                }
-
-                            case MessageContent.SETTABLE_BUILDING:
-                                agent.send(msg);
-
-                            default:
-
-                        }
-                    } else {
-                        System.out.println(msg.getContentObject().getClass());
-                    }
-                } catch (UnreadableException ex) {
-                    Logger.getLogger(HarvesterCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
-                }
-                
-        
-                
-                
-                
-                
-            }
-        }
-  	// Call coalition to collect garbage
-//        MessageWrapper messageCoalition = new MessageWrapper.setObject();
-        // coalition(cellBuilding)
-       // return true;
-    }
+//    private class ReceiveInfoBehaviour extends CyclicBehaviour {
+//
+//        public ReceiveInfoBehaviour(HarvesterCoordinatorAgent agent) {
+//            super(agent);
+//        }
+//        
+//        @Override
+//        public void action() {
+//            
+//            HarvesterCoordinatorAgent agent = (HarvesterCoordinatorAgent)this.getAgent();
+//            
+//            ACLMessage msg= blockingReceive(ACLMessage.INFORM);
+//            if (msg!=null){
+//                try {
+//                    if (msg.getContentObject().getClass().equals(MessageWrapper.class)) {
+//                        MessageWrapper message = (MessageWrapper) msg.getContentObject();
+//                        switch (message.getType()) {
+//                            case MessageContent.SEND_GAME:
+////                                agent.setGame((GameSettings) message.getObject());
+//                                //System.out.println(" Message Object Received " + " <----------- " + message.getType());
+//                                //Populate RecyclingCenter list
+//                                try {
+//                                    agent.clearRecyclingCenter();
+//                                    for (Cell[] cc : agent.game.getMap()) {
+//                                        for (Cell c : cc) {
+//                                            if (c.getCellType().equals(CellType.RECYCLING_CENTER)) {
+//                                                RecyclingCenter.add(c);
+//                                            }
+//                                        }
+//                                    }
+//                                } catch (Exception e) {
+//                                }
+//
+//                            case MessageContent.SETTABLE_BUILDING:
+//                                agent.send(msg);
+//
+//                            default:
+//
+//                        }
+//                    } else {
+//                        System.out.println(msg.getContentObject().getClass());
+//                    }
+//                } catch (UnreadableException ex) {
+//                    Logger.getLogger(HarvesterCoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
+//                }
+//                
+//        
+//                
+//                
+//                
+//                
+//            }
+//        }
+//  	// Call coalition to collect garbage
+////        MessageWrapper messageCoalition = new MessageWrapper.setObject();
+//        // coalition(cellBuilding)
+//       // return true;
+//    }
     
     
     private class SearchHarvesterBehaviour extends OneShotBehaviour {

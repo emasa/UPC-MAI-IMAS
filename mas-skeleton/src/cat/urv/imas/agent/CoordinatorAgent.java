@@ -166,6 +166,107 @@ public class CoordinatorAgent extends ImasAgent {
         //INICIO DARIO
         //Add behaviour to inform basic info about game
         addBehaviour(new InitialInformToHarvesterCoordinatorAgentBehaviour(this));
+        
+        try {
+//            if(senderID.equals(agent.getScoutCoordinatorAgent())){
+
+                //ADD MANUALLY GARBAGE TO TEST COALITION
+                
+//                ArrayList<BuildingCell> SettableBuildingCellList = agent.getGarbageFound();
+                
+                ArrayList<SettableBuildingCell> SettableBuildingCellList = new ArrayList<>();
+                      
+                SettableBuildingCell g1 = new SettableBuildingCell(3,3);
+                g1.setGarbage(GarbageType.PAPER, 10);
+                SettableBuildingCell g2 = new SettableBuildingCell(16,3);
+                g2.setGarbage(GarbageType.GLASS, 20);
+                SettableBuildingCell g3 = new SettableBuildingCell(3,7);
+                g3.setGarbage(GarbageType.PLASTIC, 20);
+                SettableBuildingCellList.add(g1);
+                SettableBuildingCellList.add(g2);
+                SettableBuildingCellList.add(g3);
+                
+//                ArrayList<BuildingCell> garbageBuildings = (ArrayList<BuildingCell>) msg.getContentObject();
+//                agent.addGarbageFound(garbageBuildings);
+//                agent.log("total garbage to comunicate to Harvesters: "+garbageBuildings);
+             
+                /* ********************************************************************/
+                // contract net system
+                ServiceDescription searchHC = new ServiceDescription();     
+                searchHC.setType(AgentType.HARVESTER_COORDINATOR.toString());
+                this.hcAgent = UtilsAgents.searchAgent(this, searchHC);
+//                this.setHarvesterCoordinatorAgent(UtilsAgents.searchAgent(this, searchHC));    
+                
+                // Cycle through garbageBuildings to get cell and start a ContractNet
+                for (int i = 0; i < this.garbageFound.size(); i++) {
+                    BuildingCell celda = this.garbageFound.get(i);
+                    // Fill the CFP message
+                    ACLMessage contract = new ACLMessage(ACLMessage.CFP);
+                    contract.addReceiver(this.hcAgent);             // Receiver is HarvesterCoordinator
+                    contract.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);  // ContractNet protocol
+                    contract.setReplyByDate(new Date(System.currentTimeMillis() + 10000));  // We want to receive a reply in 10 secs
+                    contract.setConversationId("Contract: "+i);                             // ConversationID                    
+                    System.out.println("1. "+this.getLocalName()+": sent contract "+contract.getConversationId());
+                    
+                    try {
+                        MessageWrapper mmm = new MessageWrapper();
+                        mmm.setType(MessageContent.SETTABLE_BUILDING);
+                        mmm.setObject(celda);
+                        
+                        contract.setContentObject(mmm);
+                    } catch (IOException ex) {
+                        Logger.getLogger(CoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
+                    }
+                    this.log("ContractNet Started");                    
+                    
+                    this.addBehaviour(new ContractNetInitiator(this, contract) {
+                        @Override
+                        protected void handlePropose(ACLMessage propose, Vector v) {
+                            // Receive Proposal
+                            System.out.println("3. "+propose.getSender().getName()+": proposed a coalition on "+propose.getConversationId());
+                        }
+
+                        @Override
+                        protected void handleRefuse(ACLMessage refuse) {
+                            System.out.println("3. "+refuse.getSender().getName()+": refused "+refuse.getConversationId());
+                        }
+
+                        @Override
+                        protected void handleFailure(ACLMessage failure) {
+                            if (failure.getSender().equals(myAgent.getAMS())) {
+                                // FAILURE notification from the JADE runtime: the receiver
+                                // does not exist
+                                System.out.println("Responder does not exist");
+                            }
+                            else {
+                                System.out.println("Agent "+failure.getSender().getName()+" failed "+failure.getConversationId());
+                            }
+                        }
+
+                        @Override
+                        protected void handleAllResponses(Vector responses, Vector acceptances) {
+                            // Accept Proposal. CA always accepts proposal
+                            Enumeration e = responses.elements();
+                            while (e.hasMoreElements()) {
+                                ACLMessage proposal = (ACLMessage) e.nextElement();                    
+                                ACLMessage accept = proposal.createReply();
+                                accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+                                acceptances.addElement(accept);
+                                accept.setContent(proposal.getContent()); 
+                                System.out.println("4. "+myAgent.getLocalName()+": accepted proposal "+proposal.getContent() + " for "+ proposal.getConversationId());
+                            }             
+                        }
+
+                        @Override
+                        protected void handleInform(ACLMessage inform) {
+                            System.out.println("8. "+inform.getSender().getName()+": successfully performed "+inform.getConversationId());
+                        }
+                    });
+                }
+            //}       
+                } catch (Exception e) {
+                    this.errorLog("Incorrect content: " + e.toString());
+                }
     
         // comento esta linea, porque en este punto el coordinator ya debe tener seteada esa variable.
 //         this.setGame(InitialGameSettings.load("game.settings"));
