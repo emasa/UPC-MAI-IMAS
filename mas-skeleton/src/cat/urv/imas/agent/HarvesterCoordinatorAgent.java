@@ -56,9 +56,18 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
     private GameSettings game = null;
     
     private Map<AID,SettableBuildingCell> harvesterGarbageBuilding = new HashMap<>();
+    private Map<AID,Cell> harvesterRecyclinCenter = new HashMap<>();
     private AID CoordinatorAgent;
 
-       
+    public Map<AID, Cell> getHarvesterRecyclinCenter() {
+        return harvesterRecyclinCenter;
+    }
+
+    public void setHarvesterRecyclinCenter(Map<AID, Cell> harvesterRecyclinCenter) {
+        this.harvesterRecyclinCenter = harvesterRecyclinCenter;
+    }
+
+    
     public Map<AID, SettableBuildingCell> getHarvesterGarbageBuilding() {
         return harvesterGarbageBuilding;
     }
@@ -345,6 +354,9 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
         Map<String,StreetCell> message = new HashMap<>();
         ArrayList<StreetCell> path = (ArrayList<StreetCell>) this.getHarvesterGarbagePaths().get(harvester);
         ArrayList<StreetCell> path2 = (ArrayList<StreetCell>) this.getHarvesterRecyclePaths().get(harvester);
+        this.log("=========================================================");
+        this.log(path.toString());
+        this.log(path.toString());
         if(path.isEmpty()){
             if(this.harvesterGarbageBuilding.get(harvester) != null){
                 // Harvest garbage
@@ -363,8 +375,13 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
                     }else
                         message.put("wait", null);
                 }else{
-                    // you arrive
-                    message.put("Recycle",null);
+                    if(this.harvesterRecyclinCenter.get(harvester) != null){
+                        // you arrive
+                        message.put("Recycle",null);
+                    }else{
+                        //NOTHING TODO
+                        message.put("wait", null);
+                    }
                 }
             }
         }else{
@@ -378,6 +395,8 @@ public class HarvesterCoordinatorAgent extends ImasAgent{
             }else
                 message.put("wait", null);
         }
+        this.log(message.toString());
+        this.log("=========================================================");
         return message;
     }
 

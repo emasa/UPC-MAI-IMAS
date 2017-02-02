@@ -297,11 +297,13 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                                 agent.getHarvesterGarbagePaths().put(agent.getAIDList().get(agentI), agent.getPfb().OptimalPathToCartesianCoords(h2g));
                                 agent.getHarvesterRecyclePaths().put(agent.getAIDList().get(agentI), agent.getPfb().OptimalPathToCartesianCoords(agent.getPfb().getOptimalPath(originNode, destinationNode)));
                                 agent.getHarvesterGarbageBuilding().put(agent.getAIDList().get(agentI), garbage);
+                                agent.getHarvesterRecyclinCenter().put(agent.getAIDList().get(agentI), agent.getRecyclingCenter().get(BestRecyclingCenter));
                             }
                             System.out.println(agent.getAIDList().get(agentI));
                             System.out.println("Optimal Path H2G : "+agent.getHarvesterGarbagePaths().get(agent.getAIDList().get(agentI)));
                             System.out.println("Optimal Path G2R : "+agent.getHarvesterRecyclePaths().get(agent.getAIDList().get(agentI)));
                             System.out.println("Garbage in Building : "+agent.getHarvesterGarbageBuilding().get(agent.getAIDList().get(agentI)));
+                            System.out.println("Recycling center : "+agent.getHarvesterRecyclinCenter().get(agent.getAIDList().get(agentI)));
                         }
                         
                         for (int e : agent.getAgentStatus()){
