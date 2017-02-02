@@ -12,6 +12,7 @@ import cat.urv.imas.map.CellType;
 import cat.urv.imas.map.SettableBuildingCell;
 import cat.urv.imas.map.StreetCell;
 import cat.urv.imas.onthology.GarbageType;
+import cat.urv.imas.onthology.InfoAgent;
 import jade.core.AID;
 import jade.core.behaviours.CyclicBehaviour;
 import jade.domain.FIPAAgentManagement.Property;
@@ -207,15 +208,21 @@ public class CoalitionBehaviour extends CyclicBehaviour {
                                     System.out.println(harvestersCells);
                                     for (int ii = 0; ii < harvestersCells.size(); ii++) {
                                         StreetCell harvesterCell = (StreetCell) harvestersCells.get(ii);
-                                        AID harvester = harvesterCell.getAgent().getAID();
-                                        harvesterCell.getAgent().getAID();
-                                        System.out.println(harvesterCell.getAgent().getAID());
-                                        System.out.println(agentName+"*********************");
-                                        System.out.println(harvester.getLocalName()+"*********************");
+                                        InfoAgent harvester = harvesterCell.getAgent();
+                                        if(harvester != null){
+                                            AID harvesterID = harvesterCell.getAgent().getAID();
                                         
-                                        if(harvester.getLocalName().equals(agentName)){
-                                            aX = harvesterCell.getRow();
-                                            aY = harvesterCell.getCol();
+                                            System.out.println(harvesterCell.getAgent().getAID());
+                                            System.out.println(agentName+"*********************");
+                                            System.out.println(harvesterID.getLocalName()+"*********************");
+
+                                            if(harvesterID.getLocalName().equals(agentName)){
+                                                aX = harvesterCell.getRow();
+                                                aY = harvesterCell.getCol();
+                                            }
+                                        }else{
+                                            aX = 1000;
+                                            aY = 1000;
                                         }
                                         
                                     }                                  

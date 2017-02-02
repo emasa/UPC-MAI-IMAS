@@ -5,15 +5,26 @@
  */
 package cat.urv.imas.behaviour.coordinator;
 
+import cat.urv.imas.agent.AgentType;
 import cat.urv.imas.agent.CoordinatorAgent;
+import cat.urv.imas.agent.UtilsAgents;
 import cat.urv.imas.map.BuildingCell;
 import cat.urv.imas.onthology.MessageContent;
 import cat.urv.imas.onthology.MessageWrapper;
+import jade.domain.FIPAAgentManagement.ServiceDescription;
+import jade.domain.FIPANames;
 import jade.lang.acl.ACLMessage;
 import jade.lang.acl.MessageTemplate;
 import jade.lang.acl.UnreadableException;
 import jade.proto.AchieveREResponder;
+import jade.proto.ContractNetInitiator;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
+import java.util.Enumeration;
+import java.util.Vector;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 
 /**
  *
@@ -69,6 +80,76 @@ public class GarbageReciever extends AchieveREResponder {
 
                         agent.addBehaviour(new RequesterBehaviour(agent, agent.createNewScoutStepRequest()));
                         agent.addBehaviour(new RequesterBehaviour(agent, agent.createNewHarvesterStepRequest()));
+                        
+                        // Cycle through garbageBuildings to get cell and start a ContractNet
+                        for (int i = 0; i < agent.getGarbageFound().size(); i++) {
+                            try{
+                                BuildingCell celda = agent.getGarbageFound().get(i);
+                                // Fill the CFP message
+                                ACLMessage contract = new ACLMessage(ACLMessage.CFP);
+                                contract.addReceiver(agent.getHarvesterCoordinatorAgent());             // Receiver is HarvesterCoordinator
+                                contract.setProtocol(FIPANames.InteractionProtocol.FIPA_CONTRACT_NET);  // ContractNet protocol
+                                contract.setReplyByDate(new Date(System.currentTimeMillis() + 10000));  // We want to receive a reply in 10 secs
+                                contract.setConversationId("Contract: "+i);                             // ConversationID                    
+                                System.out.println("1. "+agent.getLocalName()+": sent contract "+contract.getConversationId());
+
+                                MessageWrapper mmm = new MessageWrapper();
+                                mmm.setType(MessageContent.SETTABLE_BUILDING);
+                                mmm.setObject(celda);
+
+                                contract.setContentObject(mmm);
+
+                                agent.log("ContractNet Started");                    
+
+                                agent.addBehaviour(new ContractNetInitiator(agent, contract) {
+                                    @Override
+                                    protected void handlePropose(ACLMessage propose, Vector v) {
+                                        // Receive Proposal
+                                        System.out.println("3. "+propose.getSender().getName()+": proposed a coalition on "+propose.getConversationId());
+                                    }
+
+                                    @Override
+                                    protected void handleRefuse(ACLMessage refuse) {
+                                        System.out.println("3. "+refuse.getSender().getName()+": refused "+refuse.getConversationId());
+                                    }
+
+                                    @Override
+                                    protected void handleFailure(ACLMessage failure) {
+                                        if (failure.getSender().equals(myAgent.getAMS())) {
+                                            // FAILURE notification from the JADE runtime: the receiver
+                                            // does not exist
+                                            System.out.println("Responder does not exist");
+                                        }
+                                        else {
+                                            System.out.println("Agent "+failure.getSender().getName()+" failed "+failure.getConversationId());
+                                        }
+                                    }
+
+                                    @Override
+                                    protected void handleAllResponses(Vector responses, Vector acceptances) {
+                                        // Accept Proposal. CA always accepts proposal
+                                        Enumeration e = responses.elements();
+                                        while (e.hasMoreElements()) {
+                                            ACLMessage proposal = (ACLMessage) e.nextElement();                    
+                                            ACLMessage accept = proposal.createReply();
+                                            accept.setPerformative(ACLMessage.ACCEPT_PROPOSAL);
+                                            acceptances.addElement(accept);
+                                            accept.setContent(proposal.getContent()); 
+                                            System.out.println("4. "+myAgent.getLocalName()+": accepted proposal "+proposal.getContent() + " for "+ proposal.getConversationId());
+                                        }             
+                                    }
+
+                                    @Override
+                                    protected void handleInform(ACLMessage inform) {
+                                        System.out.println("8. "+inform.getSender().getName()+": successfully performed "+inform.getConversationId());
+                                    }
+                                });
+                            } catch (IOException ex) {
+                                Logger.getLogger(CoordinatorAgent.class.getName()).log(Level.SEVERE, null, ex);
+                            } catch (Exception e) {
+                                agent.errorLog("Incorrect content: " + e.toString());
+                            }
+                        }
                         reply.setPerformative(ACLMessage.AGREE);
                         break;
                     case MessageContent.HARVESTERS_FINISH:
